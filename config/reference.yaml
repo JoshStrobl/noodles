@@ -1,0 +1,31 @@
+name: reference project # string
+description: this is a reference project description # string
+license: Apache-2.0 # string
+version: 1.0 # string
+projects: # map[string]NoodlesProject
+  global-styling:
+    plugin: less # string
+    source: src/less/components/**.less # string
+    destination: none # If none, just merely test compilation
+    flags: [] # None of custom mode isn't set
+    mode: advanced # simple, advanced, custom
+  site-styling:
+    requires: ["global-styling"]
+    plugin: less
+    source: src/less/**/**.less # string
+    destination: build/site.css # string
+    flags: [] # None of custom mode isn't set
+    mode: advanced # simple, advanced, custom
+  website:
+    plugin: html # string
+    source: src/html # string
+    destination: build/html # string
+    frala: true # bool
+  api-endpoint:
+    plugin: go # string
+    source: src/go/main.go # string
+    destination: build/api-endpoint # string
+    binary: true # bool
+  js:
+    plugin: typescript
+    compress: true
