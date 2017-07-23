@@ -15,6 +15,14 @@ func initNoodles(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	noodles.name = coreutils.InputMessage("Name of Noodles Project")
-	fmt.Printf("%v", noodles)
+	noodles.Name = coreutils.InputMessage("Name of Noodles Project")
+	noodles.Description = coreutils.InputMessage("Description of this project")
+	noodles.License = coreutils.InputMessage("License")
+	noodles.Version = coreutils.InputMessage("Version")
+
+	if saveErr := noodles.Save(); saveErr == nil { // Save the config
+		fmt.Println("Noodles is now inited.")
+	} else { // Failed to save
+		fmt.Println(saveErr.Error())
+	}
 }

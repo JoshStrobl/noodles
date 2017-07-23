@@ -7,8 +7,10 @@ import (
 	"io/ioutil"
 )
 
+var noodles NoodlesConfig // Our Noodles Config
+
 // Read will read any local noodles.yml that exists and returns an error or NoodlesConfig
-func (n *NoodlesConfig) Read() error {
+func (n NoodlesConfig) Read() error {
 	var configBytes []byte
 	var readErr error
 
@@ -24,11 +26,11 @@ func (n *NoodlesConfig) Read() error {
 }
 
 // Save will save the NoodlesConfig to noodles.yml
-func (n *NoodlesConfig) Save() error {
+func (n NoodlesConfig) Save() error {
 	var config []byte
 	var saveErr error
 
-	if config, saveErr = yaml.Marshal(n); saveErr == nil { // Marshal our project NoodlesConfig
+	if config, saveErr = yaml.Marshal(&n); saveErr == nil { // Marshal our project NoodlesConfig
 		saveErr = coreutils.WriteOrUpdateFile("noodles.yml", config, coreutils.NonGlobalFileMode) // Write the noodles.yml as non-global
 	}
 

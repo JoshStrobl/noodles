@@ -5,7 +5,6 @@ import (
 	"os"
 )
 
-var noodles NoodlesConfig // Our Noodles Config
 var project string // Any project we're specifying for build
 
 // Commands
