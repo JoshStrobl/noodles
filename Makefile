@@ -4,7 +4,7 @@ ROOTDIR=$(shell pwd)
 
 golang:
 	cd $(ROOTDIR)/go && \
-	GOPATH=$(ROOTDIR)/go go build -o $(ROOTDIR)/build/noodles src/noodles/main.go && \
+	GOPATH=$(ROOTDIR)/go go build -o $(ROOTDIR)/build/noodles src/noodles/*.go && \
 	cd $(ROOTDIR)
 
 .PHONY: golang
