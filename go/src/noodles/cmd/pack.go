@@ -7,8 +7,8 @@ import (
 
 var packCmd = &cobra.Command{
 	Use: "pack",
-	Short: "package configured assets for all or a specified project",
-	Long: "package configured assets for all or a specified project into a distributable tarball",
+	Short: "Package configured assets for all or a specified project",
+	Long: "Package configured assets for all or a specified project into a distributable tarball",
 	Run: pack,
 }
 

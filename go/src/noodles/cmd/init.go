@@ -9,9 +9,13 @@ import (
 
 var initCmd = &cobra.Command{
 	Use: "init",
-	Short: "initialize noodles",
-	Long: "initialize noodles by generating a basic YAML configuration file",
+	Short: "Initialize noodles",
+	Long: "Initialize noodles by generating a basic YAML configuration file",
 	Run: initNoodles,
+}
+
+func init() {
+	RootCmd.AddCommand(initCmd)
 }
 
 func initNoodles(cmd *cobra.Command, args []string) {
