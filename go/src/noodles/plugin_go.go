@@ -18,8 +18,7 @@ func (n *NoodlesProject) Go(project string) {
 		return
 	}
 
-	originalGoPath = os.Getenv("GOPATH") // Store the original GOPATH
-	os.Setenv("GOPATH", workdir + "go")
+	ToggleGoEnv(true)
 
 	os.Chdir(workdir + coreutils.Separator + "go") // Change to our go directory
 
@@ -31,6 +30,7 @@ func (n *NoodlesProject) Go(project string) {
 
 	if createDirsErr := os.MkdirAll(filepath.Dir(n.Destination), coreutils.NonGlobalFileMode); createDirsErr != nil { // Make all the necessary directories we need to
 		fmt.Printf("Failed to create the necessary directories:\n%s\n", createDirsErr.Error())
+		ToggleGoEnv(false)
 		return
 	}
 
@@ -46,6 +46,16 @@ func (n *NoodlesProject) Go(project string) {
 		fmt.Println("Build successful.")
 	}
 
-	os.Setenv("GOPATH", originalGoPath)
-	os.Chdir(workdir)
+	ToggleGoEnv(false)
+}
+
+// ToggleGoEnv will toggle our usage of GOPATH and working directory
+func ToggleGoEnv(on bool) {
+	if on {
+		originalGoPath = os.Getenv("GOPATH") // Store the original GOPATH
+		os.Setenv("GOPATH", workdir + "go")
+	} else {
+		os.Setenv("GOPATH", originalGoPath)
+		os.Chdir(workdir)
+	}
 }
