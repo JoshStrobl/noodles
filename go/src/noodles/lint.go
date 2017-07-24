@@ -16,7 +16,7 @@ var lintCmd = &cobra.Command {
 
 // lint will validate noodles.toml
 func lint(cmd *cobra.Command, args []string) {
-	readErr := noodles.Read() // Read the config
+	readErr := ReadConfig() // Read the config
 
 	if readErr == nil {
 		fmt.Println("noodles.toml appears correct.")

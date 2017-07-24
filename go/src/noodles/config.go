@@ -9,13 +9,13 @@ import (
 var noodles NoodlesConfig // Our Noodles Config
 
 // Read will read any local noodles.toml that exists and returns an error or NoodlesConfig
-func (n NoodlesConfig) Read() error {
-	_, convErr := toml.DecodeFile(workdir + "noodles.toml", &n)
+func ReadConfig() error {
+	_, convErr := toml.DecodeFile(workdir + "noodles.toml", &noodles)
 	return convErr
 }
 
 // Save will save the NoodlesConfig to noodles.toml
-func (n NoodlesConfig) Save() error {
+func SaveConfig() error {
 	var saveErr error
 	buffer := new(bytes.Buffer) // Create a buffer for the encoder
 

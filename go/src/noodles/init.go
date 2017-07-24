@@ -37,7 +37,7 @@ func initNoodles(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	if saveErr := noodles.Save(); saveErr == nil { // Save the config
+	if saveErr := SaveConfig(); saveErr == nil { // Save the config
 		fmt.Println("Noodles is now inited.")
 	} else { // Failed to save
 		fmt.Println(saveErr.Error())

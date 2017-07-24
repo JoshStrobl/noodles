@@ -2,3 +2,10 @@ Description = "Noodles is an opinionated project manager"
 License = "Apache-2.0"
 Name = "Noodles"
 Version = 0.1
+
+[Projects]
+  [Projects.noodles]
+  Binary = true
+  Destination = "build/noodles"
+  Plugin = "go"
+  Source = "*.go"
