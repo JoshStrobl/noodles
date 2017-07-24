@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-var lintCmd = &cobra.Command {
-	Use: "lint",
+var lintCmd = &cobra.Command{
+	Use:   "lint",
 	Short: "Validates the existing noodles.toml",
-	Long: "Validates the existing noodles.toml",
-	Run: lint,
+	Long:  "Validates the existing noodles.toml",
+	Run:   lint,
 }
 
 // lint will validate noodles.toml
@@ -34,7 +34,7 @@ func CleanLintErrors(err string) string {
 
 	re := regexp.MustCompile(`line\s\d+:\s[\s\S]+$`) // Only get line N: message
 	lineErrors := re.FindAllString(cleanMessage, -1) // Find all strings
-	cleanMessage = strings.Join(lineErrors, "\n") // Join all with newline
+	cleanMessage = strings.Join(lineErrors, "\n")    // Join all with newline
 
 	return strings.Replace(cleanMessage, "  ", "", -1) // Remove any unnecessary whitespace
 }

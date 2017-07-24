@@ -2,15 +2,15 @@ package main
 
 import (
 	"bytes"
-	"github.com/stroblindustries/coreutils"
 	"github.com/BurntSushi/toml"
+	"github.com/stroblindustries/coreutils"
 )
 
 var noodles NoodlesConfig // Our Noodles Config
 
 // Read will read any local noodles.toml that exists and returns an error or NoodlesConfig
 func ReadConfig() error {
-	_, convErr := toml.DecodeFile(workdir + "noodles.toml", &noodles)
+	_, convErr := toml.DecodeFile(workdir+"noodles.toml", &noodles)
 	return convErr
 }
 

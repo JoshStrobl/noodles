@@ -9,10 +9,10 @@ import (
 )
 
 var initCmd = &cobra.Command{
-	Use: "init",
+	Use:   "init",
 	Short: "Initialize noodles",
-	Long: "Initialize noodles by generating a basic TOML configuration file",
-	Run: initNoodles,
+	Long:  "Initialize noodles by generating a basic TOML configuration file",
+	Run:   initNoodles,
 }
 
 func initNoodles(cmd *cobra.Command, args []string) {

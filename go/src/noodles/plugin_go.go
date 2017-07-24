@@ -35,7 +35,7 @@ func (n *NoodlesProject) Go(project string) {
 	}
 
 	files := n.GetFiles()
-	args := []string{"build", "-o", n.Destination,}
+	args := []string{"build", "-o", n.Destination}
 	args = append(args, files...)
 
 	goCompilerOutput := coreutils.ExecCommand("go", args, true)
@@ -53,7 +53,7 @@ func (n *NoodlesProject) Go(project string) {
 func ToggleGoEnv(on bool) {
 	if on {
 		originalGoPath = os.Getenv("GOPATH") // Store the original GOPATH
-		os.Setenv("GOPATH", workdir + "go")
+		os.Setenv("GOPATH", workdir+"go")
 	} else {
 		os.Setenv("GOPATH", originalGoPath)
 		os.Chdir(workdir)

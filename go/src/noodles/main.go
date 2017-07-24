@@ -13,7 +13,7 @@ var workdir string // Our working directory
 // Commands
 
 var rootCmd = &cobra.Command{
-	Use: "noodles",
+	Use:   "noodles",
 	Short: "noodles is an opinionated manager for web apps.",
 	Long: `noodles is an opinionated manager for web applications, enabling various functionality such as:
 	- basic dependency management for built-in plugin support
@@ -49,7 +49,7 @@ func init() {
 }
 
 func main() {
-	if err :=rootCmd.Execute(); err != nil {
+	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }

@@ -15,7 +15,7 @@ func (n *NoodlesProject) GetFiles() []string {
 	if n.Source != "" { // If a source is defined
 		filePath := filepath.Dir(n.Source)
 		fileName := filepath.Base(n.Source) // Get the file name
-		
+
 		if strings.HasPrefix(fileName, "*") { // If we're globbing
 			files, _ = coreutils.GetFilesContains(filePath, filepath.Ext(fileName))
 		} else { // If we're not globbing
