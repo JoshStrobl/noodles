@@ -25,6 +25,13 @@ var initCmd = &cobra.Command{
 	Run: initNoodles,
 }
 
+var lintCmd = &cobra.Command {
+	Use: "lint",
+	Short: "Validates the existing noodles.yml",
+	Long: "Validates the existing noodles.yml",
+	Run: lint,
+}
+
 var packCmd = &cobra.Command{
 	Use: "pack",
 	Short: "Package configured assets for all or a specified project",
@@ -36,6 +43,7 @@ var packCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(initCmd)
+	rootCmd.AddCommand(lintCmd)
 	rootCmd.AddCommand(packCmd)
 
 	// Persistent Flags

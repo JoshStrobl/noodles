@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stroblindustries/coreutils"
 	"os"
+	"strconv"
 )
 
 func initNoodles(cmd *cobra.Command, args []string) {
@@ -18,7 +19,16 @@ func initNoodles(cmd *cobra.Command, args []string) {
 	noodles.Name = coreutils.InputMessage("Name of Noodles Project")
 	noodles.Description = coreutils.InputMessage("Description of this project")
 	noodles.License = coreutils.InputMessage("License")
-	noodles.Version = coreutils.InputMessage("Version")
+
+	for noodles.Version == 0 {
+		version := coreutils.InputMessage("Version")
+
+		if num, convertErr := strconv.ParseFloat(version, 64); convertErr == nil { // Convert the version to a float64, if it's valid
+			noodles.Version = num
+		} else {
+			fmt.Println("Invalid Version Number. Please try again.")
+		}
+	}
 
 	if saveErr := noodles.Save(); saveErr == nil { // Save the config
 		fmt.Println("Noodles is now inited.")

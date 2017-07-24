@@ -16,7 +16,7 @@ func (n NoodlesConfig) Read() error {
 
 	if configBytes, readErr = ioutil.ReadFile("noodles.yml"); readErr == nil { // Read the contents of noodles.yml
 		if len(configBytes) != 0 { // If the file isn't empty
-			readErr = yaml.Unmarshal(configBytes, n)
+			readErr = yaml.Unmarshal(configBytes, &n)
 		} else {
 			readErr = errors.New("noodles.yml is empty. Please init a noodles project.")
 		}
