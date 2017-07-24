@@ -18,27 +18,30 @@ func (n *NoodlesProject) Go(project string) {
 		return
 	}
 
+	originalGoPath = os.Getenv("GOPATH") // Store the original GOPATH
+	os.Setenv("GOPATH", workdir + "go")
+
+	os.Chdir(workdir + coreutils.Separator + "go") // Change to our go directory
+
 	if n.Destination == "" { // If no destination is set
 		n.Destination = "build" + coreutils.Separator + project // Set destination to build/name (as binary)
 	}
+
+	n.Destination = workdir + n.Destination
 
 	if createDirsErr := os.MkdirAll(filepath.Dir(n.Destination), coreutils.NonGlobalFileMode); createDirsErr != nil { // Make all the necessary directories we need to
 		fmt.Printf("Failed to create the necessary directories:\n%s\n", createDirsErr.Error())
 		return
 	}
 
-	args := []string{"-o", n.Destination}
+	files := n.GetFiles()
+	args := []string{"build", "-o", n.Destination,}
+	args = append(args, files...)
 
-	originalGoPath = os.Getenv("GOPATH") // Store the original GOPATH
-	os.Setenv("GOPATH", workdir + "go")
-
-	os.Chdir(workdir + coreutils.Separator + "go") // Change to our go directory
-	args = append(args, n.Source)
-
-	goCompilerOutput := coreutils.ExecCommand("go", args, false)
+	goCompilerOutput := coreutils.ExecCommand("go", args, true)
 
 	if strings.Contains(goCompilerOutput, ".go") || strings.Contains(goCompilerOutput, "# command") { // If running the go build shows there are obvious issues
-		fmt.Println(goCompilerOutput)
+		fmt.Println(strings.TrimSpace(goCompilerOutput))
 	} else { // If there was no obvious issues
 		fmt.Println("Build successful.")
 	}

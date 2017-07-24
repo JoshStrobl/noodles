@@ -8,4 +8,4 @@ Version = 0.1
   Binary = true
   Destination = "build/noodles"
   Plugin = "go"
-  Source = "*.go"
+  Source = "src/noodles/*.go"

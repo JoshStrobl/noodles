@@ -19,6 +19,11 @@ var rootCmd = &cobra.Command{
 	- basic dependency management for built-in plugin support
 	- compilation of project(s) in a configurable, ordered manner
 	- configurable packing of project assets for distribution`,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if cmd.Use != "init" { // If we're not initializing
+			ReadConfig() // Read the config
+		}
+	},
 }
 
 // Main
