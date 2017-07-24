@@ -21,27 +21,6 @@ var rootCmd = &cobra.Command{
 	- configurable packing of project assets for distribution`,
 }
 
-var initCmd = &cobra.Command{
-	Use: "init",
-	Short: "Initialize noodles",
-	Long: "Initialize noodles by generating a basic YAML configuration file",
-	Run: initNoodles,
-}
-
-var lintCmd = &cobra.Command {
-	Use: "lint",
-	Short: "Validates the existing noodles.yml",
-	Long: "Validates the existing noodles.yml",
-	Run: lint,
-}
-
-var packCmd = &cobra.Command{
-	Use: "pack",
-	Short: "Package configured assets for all or a specified project",
-	Long: "Package configured assets for all or a specified project into a distributable tarball",
-	Run: pack,
-}
-
 // Main
 
 func init() {
@@ -56,6 +35,7 @@ func init() {
 	}
 
 	rootCmd.AddCommand(initCmd)
+	rootCmd.AddCommand(buildCmd)
 	rootCmd.AddCommand(lintCmd)
 	rootCmd.AddCommand(packCmd)
 

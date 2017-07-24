@@ -3,23 +3,23 @@ package main
 // NoodlesConfig
 // Configuration of Noodles and its projects
 type NoodlesConfig struct {
-	Description string "description"
-	License string "license"
-	Name string "name"
-	Projects map[string]NoodlesProject "projects,flow"
-	Version float64 "version"
+	Description string `toml: "description"`
+	License string `toml: "license"`
+	Name string `toml: "name"`
+	Projects map[string]NoodlesProject `toml: "projects"`
+	Version float64 `toml: "version"`
 }
 
 // NoodlesProject
 // Configuration for Noodles Projects
 type NoodlesProject struct {
-	Binary bool "binary,omitempty"
-	Compress bool "compress,omitempty"
-	Destination string "destination,omitempty"
-	Flags []string "flags,omitempty"
-	Frala bool "frala,omitempty"
-	Mode string "mode,omitempty"
-	Plugin string "plugin"
-	Requires []string "requires,omitempty"
-	Source string "source"
+	Binary bool `toml: "binary,omitempty"`
+	Compress bool `toml: "compress,omitempty"`
+	Destination string `toml: "destination,omitempty"`
+	Flags []string `toml: "flags,omitempty"`
+	Frala bool `toml: "frala,omitempty"`
+	Mode string `toml: "mode,omitempty"`
+	Plugin string `toml: "plugin"`
+	Requires []string `toml: "requires,omitempty"`
+	Source string `toml: "source"`
 }

@@ -1,37 +1,26 @@
 package main
 
 import (
-	"errors"
+	"bytes"
 	"github.com/stroblindustries/coreutils"
-	"gopkg.in/yaml.v2"
-	"io/ioutil"
+	"github.com/BurntSushi/toml"
 )
 
 var noodles NoodlesConfig // Our Noodles Config
 
-// Read will read any local noodles.yml that exists and returns an error or NoodlesConfig
+// Read will read any local noodles.toml that exists and returns an error or NoodlesConfig
 func (n NoodlesConfig) Read() error {
-	var configBytes []byte
-	var readErr error
-
-	if configBytes, readErr = ioutil.ReadFile("noodles.yml"); readErr == nil { // Read the contents of noodles.yml
-		if len(configBytes) != 0 { // If the file isn't empty
-			readErr = yaml.Unmarshal(configBytes, &n)
-		} else {
-			readErr = errors.New("noodles.yml is empty. Please init a noodles project.")
-		}
-	}
-
-	return readErr
+	_, convErr := toml.DecodeFile(workdir + "noodles.toml", &n)
+	return convErr
 }
 
-// Save will save the NoodlesConfig to noodles.yml
+// Save will save the NoodlesConfig to noodles.toml
 func (n NoodlesConfig) Save() error {
-	var config []byte
 	var saveErr error
+	buffer := new(bytes.Buffer) // Create a buffer for the encoder
 
-	if config, saveErr = yaml.Marshal(&n); saveErr == nil { // Marshal our project NoodlesConfig
-		saveErr = coreutils.WriteOrUpdateFile("noodles.yml", config, coreutils.NonGlobalFileMode) // Write the noodles.yml as non-global
+	if saveErr = toml.NewEncoder(buffer).Encode(noodles); saveErr == nil { // Encode our noodles struct into a buffer
+		saveErr = coreutils.WriteOrUpdateFile("noodles.toml", buffer.Bytes(), coreutils.NonGlobalFileMode) // Write the noodles.toml as non-global
 	}
 
 	return saveErr

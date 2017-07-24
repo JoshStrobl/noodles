@@ -7,15 +7,22 @@ import (
 	"strings"
 )
 
-// lint will validate noodles.yml
+var lintCmd = &cobra.Command {
+	Use: "lint",
+	Short: "Validates the existing noodles.toml",
+	Long: "Validates the existing noodles.toml",
+	Run: lint,
+}
+
+// lint will validate noodles.toml
 func lint(cmd *cobra.Command, args []string) {
 	readErr := noodles.Read() // Read the config
 
 	if readErr == nil {
-		fmt.Println("noodles.yml appears correct.")
+		fmt.Println("noodles.toml appears correct.")
 	} else {
 		cleanMessage := CleanLintErrors(readErr.Error())
-		fmt.Printf("noodles.yml appears to have the following issue(s):\n%s\n", cleanMessage)
+		fmt.Printf("noodles.toml appears to have the following issue(s):\n%s\n", cleanMessage)
 	}
 }
 

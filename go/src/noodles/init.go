@@ -8,10 +8,17 @@ import (
 	"strconv"
 )
 
+var initCmd = &cobra.Command{
+	Use: "init",
+	Short: "Initialize noodles",
+	Long: "Initialize noodles by generating a basic TOML configuration file",
+	Run: initNoodles,
+}
+
 func initNoodles(cmd *cobra.Command, args []string) {
-	if configInfo, statErr := os.Stat("noodles.yml"); statErr == nil { // Check if noodles.yml already exists
+	if configInfo, statErr := os.Stat("noodles.toml"); statErr == nil { // Check if noodles.toml already exists
 		if configInfo.Size() != 0 { // If the size of the file is greater than 0, meaning there is potentially content
-			fmt.Println("noodles.yml already exists and appears to have content. Exiting.")
+			fmt.Println("noodles.toml already exists and appears to have content. Exiting.")
 			return
 		}
 	}
