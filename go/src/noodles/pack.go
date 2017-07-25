@@ -30,7 +30,6 @@ func pack(cmd *cobra.Command, args []string) {
 
 	now := strconv.FormatInt(time.Now().Unix(), 10) // Convert the current Unix time to a string
 	tmpDir = os.TempDir() + coreutils.Separator + "noodles-" + now + coreutils.Separator
-	fmt.Println(tmpDir)
 
 	for _, project := range noodles.Projects { // For each project
 		if project.Plugin != "" { // If a plugin is defined
