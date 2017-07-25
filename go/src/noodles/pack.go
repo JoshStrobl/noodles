@@ -3,8 +3,10 @@ package main
 import (
 	"archive/tar"
 	"fmt"
+	"github.com/ulikunitz/xz"
 	"github.com/spf13/cobra"
 	"github.com/stroblindustries/coreutils"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -51,7 +53,7 @@ func pack(cmd *cobra.Command, args []string) {
 							coreutils.CopyFile(project.Destination, tmpDir + binaryName) // Copy the file
 						} else { // If is in an inner folder
 							childDirectoriesOfFolder := strings.TrimPrefix(folders, "build" + coreutils.Separator)
-							coreutils.CopyDirectory(folders, tmpDir + childDirectoriesOfFolder) // Copy the directory instead
+							coreutils.CopyDirectory(folders, tmpDir + childDirectoriesOfFolder) // Copy the github.com/ulikunitz/xzdirectory instead
 						}
 					}
 			}
@@ -65,13 +67,31 @@ func pack(cmd *cobra.Command, args []string) {
 // TarContents will create a tar file out of the contents of our temporary directory and save it to the cooresponding .tar file
 func TarContents() {
 	version := strconv.FormatFloat(noodles.Version, 'f', -1, 64) // Convert our float64 noodles.Version to a version string
-	file, createErr := os.Create(noodlesCondensedName + "-" + version + ".tar") // Create a .tar file with the condensed name and version (ex. noodles-0.1.tar)
+	tarName := noodlesCondensedName + "-" + version + ".tar"
+	file, createErr := os.Create(tarName) // Create a .tar file with the condensed name and version (ex. noodles-0.1.tar)
 
 	if createErr == nil { // If we did not fail to create the .tar file
 		tarWriter := tar.NewWriter(file)
 		TarDirectory(tarWriter, tmpDir)
 		tarWriter.Close() // Flush all contents to the file
 		file.Close() // Close the file
+
+		if xzfile, xzCreateErr := os.Create(tarName + ".xz"); xzCreateErr == nil { // Create an xz file
+			tarContent, _ := ioutil.ReadFile(tarName)
+
+			if len(tarContent) != 0 { // If there is content
+				if xzWriter, xzWriterErr := xz.NewWriter(xzfile); xzWriterErr == nil {
+					xzWriter.Write(tarContent)
+					xzWriter.Close()
+					xzfile.Close()
+					os.Remove(tarName) // Remove the .tar file since it is no longer needed.
+				} else {
+					fmt.Println("Failed to create a compressed tarball.")
+				}
+			} else {
+				fmt.Println("No content found in tarball.")
+			}
+		}
 	} else {
 		fmt.Println("Failed to create our .tar file.")
 	}
