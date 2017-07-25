@@ -5,9 +5,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stroblindustries/coreutils"
 	"os"
+	"strings"
 )
 
 var project string // Any project we're specifying for build
+var noodlesCondensedName string // Condensed Noodles name
 var workdir string // Our working directory
 
 // Commands
@@ -22,6 +24,11 @@ var rootCmd = &cobra.Command{
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if cmd.Use != "init" { // If we're not initializing
 			ReadConfig() // Read the config
+
+			if noodles.Name != "" { // If Name is set
+				noodlesCondensedName = strings.ToLower(noodles.Name) // Lowercase the noodles.Name
+				noodlesCondensedName = strings.Replace(strings.TrimSpace(noodlesCondensedName), " ", "_", -1) // Trim the project name and replace any whitespace with _
+			}
 		}
 	},
 }
