@@ -9,3 +9,9 @@ Version = 0.1
   Destination = "build/noodles"
   Plugin = "go"
   Source = "src/noodles/*.go"
+
+  [Projects.noodlestest]
+  Binary = true
+  Destination = "build/test-recursion/noodles"
+  Plugin = "go"
+  Source = "src/noodles/*.go"

@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -22,24 +23,35 @@ var packCmd = &cobra.Command{
 
 // pack will package configured assets for a specified project into a tarball
 func pack(cmd *cobra.Command, args []string) {
+	var projectsToPack map[string]NoodlesProject
+
 	if project == "" {
 		fmt.Println("Packing all the things!")
+		projectsToPack = noodles.Projects
 	} else {
-		fmt.Printf("Packing %s\n", project)
+		projectsToPack = map[string]NoodlesProject{
+			project: noodles.Projects[project],
+		}
 	}
 
 	now := strconv.FormatInt(time.Now().Unix(), 10) // Convert the current Unix time to a string
 	tmpDir = os.TempDir() + coreutils.Separator + "noodles-" + now + coreutils.Separator
 
-	for _, project := range noodles.Projects { // For each project
+	for projectName, project := range projectsToPack { // For each project
+		fmt.Println("Packing " + projectName)
 		if project.Plugin != "" { // If a plugin is defined
 			switch (project.Plugin) {
 				case "go":
 					if project.Binary { // If we're making a binary, copy it
-						binName := filepath.Base(project.Destination)
+						relativePathToBuild, _ := filepath.Rel("build" + coreutils.Separator, project.Destination)
+						folders := filepath.Dir(project.Destination)
+						binaryName := filepath.Base(project.Destination)
 
-						if copyErr := coreutils.CopyFile(project.Destination, tmpDir + binName); copyErr != nil {
-							fmt.Println(copyErr)
+						if binaryName == relativePathToBuild { // If the binary is directly in build folder
+							coreutils.CopyFile(project.Destination, tmpDir + binaryName) // Copy the file
+						} else { // If is in an inner folder
+							childDirectoriesOfFolder := strings.TrimPrefix(folders, "build" + coreutils.Separator)
+							coreutils.CopyDirectory(folders, tmpDir + childDirectoriesOfFolder) // Copy the directory instead
 						}
 					}
 			}
@@ -47,6 +59,7 @@ func pack(cmd *cobra.Command, args []string) {
 	}
 
 	TarContents()
+	os.RemoveAll(tmpDir) // Wipe our tmpDir
 }
 
 // TarContents will create a tar file out of the contents of our temporary directory and save it to the cooresponding .tar file
@@ -62,13 +75,10 @@ func TarContents() {
 	} else {
 		fmt.Println("Failed to create our .tar file.")
 	}
-
-	os.RemoveAll(tmpDir) // Wipe our tmpDir
 }
 
 // TarDirectory will take our tar Writer and a directory and write its contents
 func TarDirectory(writer *tar.Writer, directory string) {
-	fmt.Println("Packaging " + directory)
 	if dir, openErr := os.Open(directory); openErr == nil { // Create an os.File struct via Open
 		if dirContents, readErr := dir.Readdirnames(-1); readErr == nil { // If there was no readErr
 			for _, fileName := range dirContents { // For each FileInfo struct in dirContents
@@ -77,11 +87,19 @@ func TarDirectory(writer *tar.Writer, directory string) {
 					fileHeader, fileHeaderErr := tar.FileInfoHeader(fileStats, "") // Create a new tar.Header
 
 					if fileHeaderErr == nil { // If we didn't fail to create a FileInfoHeader
-						writer.WriteHeader(fileHeader) // Write our fileHeader
-
 						if fileStats.IsDir() { // If this is a directory
-							TarDirectory(writer, directory + coreutils.Separator + fileName)
+							writer.WriteHeader(fileHeader) // Immediately write our fileHeader
+
+							TarDirectory(writer, directory + fileName)
 						} else { // If this is a file
+							relativeFolderName, _ := filepath.Rel(tmpDir, directory)
+
+							if relativeFolderName != "." { // If we're not in the root directory of the tmpDir
+								fileHeader.Name = relativeFolderName + coreutils.Separator + fileName
+							}
+
+							writer.WriteHeader(fileHeader) // Immediately write our fileHeader
+
 							bytes := make([]byte, fileStats.Size()) // Make a bytes array the size of the file
 							file.Read(bytes) // Read into bytes
 							writer.Write(bytes) // Write the bytes into the tar.Writer
