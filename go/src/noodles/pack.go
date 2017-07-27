@@ -65,7 +65,7 @@ func pack(cmd *cobra.Command, args []string) {
 	os.RemoveAll(tmpDir) // Wipe our tmpDir
 }
 
-// TarContents will create a tar file out of the contents of our temporary directory and save it to the cooresponding .tar file
+// TarContents will create a tar file out of the contents of our temporary directory and save it to the corresponding .tar file
 func TarContents() {
 	version := strconv.FormatFloat(noodles.Version, 'f', -1, 64) // Convert our float64 noodles.Version to a version string
 	tarName := noodlesCondensedName + "-" + version + ".tar"

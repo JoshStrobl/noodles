@@ -12,6 +12,7 @@ import (
 
 var originalGoPath string
 
+// Go is our plugin functionality for compilation of Go code.
 func (n *NoodlesProject) Go(project string) {
 	if !coreutils.ExecutableExists("go") { // If the go executable exists
 		fmt.Println("Go is not installed on your system. Please run noodles setup.")

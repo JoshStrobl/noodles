@@ -9,9 +9,14 @@ import (
 
 // This is the Typescript plugin
 
-var SimpleTypescriptCompilerOptions []string   // Simple TypeScript compiler options
-var AdvancedTypescriptCompilerOptions []string // Advanced Typescript compiler options
-var StrictTypescriptCompilerOptions []string   // Strict Typescript compiler options
+// SimpleTypescriptCompilerOptions are simple compiler options, namely declaration creation and removal of comments.
+var SimpleTypescriptCompilerOptions []string
+
+// AdvancedTypescriptCompilerOptions are advanced compiler options, includes simple options.
+var AdvancedTypescriptCompilerOptions []string 
+
+// StrictTypescriptCompilerOptions are our most strict compiler options, includes advanced options.
+var StrictTypescriptCompilerOptions []string
 
 // Do some Typescript compiler option initing
 func init() {
@@ -32,6 +37,7 @@ func init() {
 	StrictTypescriptCompilerOptions = append(StrictTypescriptCompilerOptions, AdvancedTypescriptCompilerOptions...)
 }
 
+// Typescript is our plugin functionality for compilation of TypeScript into Javascript.
 func (n *NoodlesProject) Typescript(project string) {
 	if !coreutils.ExecutableExists("tsc") { // If the tsc executable exists
 		fmt.Println("tsc is not installed on your system. Please run noodles setup.")

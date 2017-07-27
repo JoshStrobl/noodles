@@ -1,7 +1,6 @@
 package main
 
-// NoodlesConfig
-// Configuration of Noodles and its projects
+// NoodlesConfig is the configuration of global properties of Noodles.
 type NoodlesConfig struct {
 	Description string
 	License     string
@@ -10,8 +9,7 @@ type NoodlesConfig struct {
 	Version     float64
 }
 
-// NoodlesProject
-// Configuration for Noodles Projects
+// NoodlesProject is the configuration for Noodles Projects.
 type NoodlesProject struct {
 	Binary      bool
 	Compress    bool

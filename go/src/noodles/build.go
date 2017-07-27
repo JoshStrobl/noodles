@@ -16,7 +16,7 @@ var buildCmd = &cobra.Command{
 
 func build(cmd *cobra.Command, args []string) {
 	if project == "" { // If no project is set
-		for name, _ := range noodles.Projects { // For each project
+		for name := range noodles.Projects { // For each project
 			BuildProject(name)
 		}
 	} else { // If a specific project is set
