@@ -13,7 +13,7 @@ import (
 var SimpleTypescriptCompilerOptions []string
 
 // AdvancedTypescriptCompilerOptions are advanced compiler options, includes simple options.
-var AdvancedTypescriptCompilerOptions []string 
+var AdvancedTypescriptCompilerOptions []string
 
 // StrictTypescriptCompilerOptions are our most strict compiler options, includes advanced options.
 var StrictTypescriptCompilerOptions []string
