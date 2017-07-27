@@ -8,9 +8,9 @@ import (
 	"strings"
 )
 
-var project string // Any project we're specifying for build
+var project string              // Any project we're specifying for build
 var noodlesCondensedName string // Condensed Noodles name
-var workdir string // Our working directory
+var workdir string              // Our working directory
 
 // Commands
 
@@ -26,7 +26,7 @@ var rootCmd = &cobra.Command{
 			ReadConfig() // Read the config
 
 			if noodles.Name != "" { // If Name is set
-				noodlesCondensedName = strings.ToLower(noodles.Name) // Lowercase the noodles.Name
+				noodlesCondensedName = strings.ToLower(noodles.Name)                                          // Lowercase the noodles.Name
 				noodlesCondensedName = strings.Replace(strings.TrimSpace(noodlesCondensedName), " ", "_", -1) // Trim the project name and replace any whitespace with _
 			}
 		}

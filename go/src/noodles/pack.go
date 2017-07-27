@@ -43,20 +43,20 @@ func pack(cmd *cobra.Command, args []string) {
 		fmt.Println("Packing " + projectName)
 
 		if project.Plugin != "" { // If a plugin is defined
-			switch (project.Plugin) {
-				case "go":
-					if project.Binary { // If we're making a binary, copy it
-						relativePathToBuild, _ := filepath.Rel("build" + coreutils.Separator, project.Destination)
-						folders := filepath.Dir(project.Destination)
-						binaryName := filepath.Base(project.Destination)
+			switch project.Plugin {
+			case "go":
+				if project.Binary { // If we're making a binary, copy it
+					relativePathToBuild, _ := filepath.Rel("build"+coreutils.Separator, project.Destination)
+					folders := filepath.Dir(project.Destination)
+					binaryName := filepath.Base(project.Destination)
 
-						if binaryName == relativePathToBuild { // If the binary is directly in build folder
-							coreutils.CopyFile(project.Destination, tmpDir + binaryName) // Copy the file
-						} else { // If is in an inner folder
-							childDirectoriesOfFolder := strings.TrimPrefix(folders, "build" + coreutils.Separator)
-							coreutils.CopyDirectory(folders, tmpDir + childDirectoriesOfFolder) // Copy the github.com/ulikunitz/xzdirectory instead
-						}
+					if binaryName == relativePathToBuild { // If the binary is directly in build folder
+						coreutils.CopyFile(project.Destination, tmpDir+binaryName) // Copy the file
+					} else { // If is in an inner folder
+						childDirectoriesOfFolder := strings.TrimPrefix(folders, "build"+coreutils.Separator)
+						coreutils.CopyDirectory(folders, tmpDir+childDirectoriesOfFolder) // Copy the github.com/ulikunitz/xzdirectory instead
 					}
+				}
 			}
 		}
 	}
@@ -75,7 +75,7 @@ func TarContents() {
 		tarWriter := tar.NewWriter(file)
 		TarDirectory(tarWriter, tmpDir)
 		tarWriter.Close() // Flush all contents to the file
-		file.Close() // Close the file
+		file.Close()      // Close the file
 
 		if xzfile, xzCreateErr := os.Create(tarName + ".xz"); xzCreateErr == nil { // Create an xz file
 			tarContent, _ := ioutil.ReadFile(tarName)
@@ -111,7 +111,7 @@ func TarDirectory(writer *tar.Writer, directory string) {
 						if fileStats.IsDir() { // If this is a directory
 							writer.WriteHeader(fileHeader) // Immediately write our fileHeader
 
-							TarDirectory(writer, directory + fileName)
+							TarDirectory(writer, directory+fileName)
 						} else { // If this is a file
 							relativeFolderName, _ := filepath.Rel(tmpDir, directory)
 
@@ -122,14 +122,14 @@ func TarDirectory(writer *tar.Writer, directory string) {
 							writer.WriteHeader(fileHeader) // Immediately write our fileHeader
 
 							bytes := make([]byte, fileStats.Size()) // Make a bytes array the size of the file
-							file.Read(bytes) // Read into bytes
-							writer.Write(bytes) // Write the bytes into the tar.Writer
+							file.Read(bytes)                        // Read into bytes
+							writer.Write(bytes)                     // Write the bytes into the tar.Writer
 						}
 					} else {
 						fmt.Printf("Failed to create a FileInfoHeader:\n%s\n", fileHeaderErr)
 					}
 				} else { // If we failed to open the file
-					fmt.Println("Failed to open " + fileName + ":\n%s\n", fileOpenErr)
+					fmt.Println("Failed to open "+fileName+":\n%s\n", fileOpenErr)
 				}
 			}
 		} else { // If we failed to read the directory
