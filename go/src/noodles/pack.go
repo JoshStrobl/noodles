@@ -3,7 +3,7 @@ package main
 import (
 	"archive/tar"
 	"fmt"
-	"github.com/ulikunitz/xz"
+	"github.com/solus-project/xzed"
 	"github.com/spf13/cobra"
 	"github.com/stroblindustries/coreutils"
 	"io/ioutil"
@@ -41,6 +41,7 @@ func pack(cmd *cobra.Command, args []string) {
 
 	for projectName, project := range projectsToPack { // For each project
 		fmt.Println("Packing " + projectName)
+
 		if project.Plugin != "" { // If a plugin is defined
 			switch (project.Plugin) {
 				case "go":
@@ -80,7 +81,7 @@ func TarContents() {
 			tarContent, _ := ioutil.ReadFile(tarName)
 
 			if len(tarContent) != 0 { // If there is content
-				if xzWriter, xzWriterErr := xz.NewWriter(xzfile); xzWriterErr == nil {
+				if xzWriter, xzWriterErr := xzed.NewWriterLevel(xzfile, xzed.BestCompression); xzWriterErr == nil {
 					xzWriter.Write(tarContent)
 					xzWriter.Close()
 					xzfile.Close()

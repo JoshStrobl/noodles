@@ -8,9 +8,9 @@ import (
 	"strings"
 )
 
-var originalGoPath string
+// This is the Go plugin
 
-// This is the Go plugin code
+var originalGoPath string
 
 func (n *NoodlesProject) Go(project string) {
 	if !coreutils.ExecutableExists("go") { // If the go executable exists
