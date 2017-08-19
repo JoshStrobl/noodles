@@ -4,21 +4,21 @@ Name = "Noodles"
 Version = 0.1
 
 [Projects]
-  [Projects.noodles]
-  Binary = true
-  Destination = "build/noodles"
-  Plugin = "go"
-  Source = "src/noodles/*.go"
-
-  [Projects.noodlestest]
-  Binary = true
-  Destination = "build/test-recursion/noodles"
-  Plugin = "go"
-  Source = "src/noodles/*.go"
-
-  [Projects.exampletypescript]
-  Compress = true
-  Destination="build/typescript/example.js"
-  Mode="strict"
-  Plugin="typescript"
-  Source = "src/typescript/example/example.ts"
+	[Projects.exampleless]
+		Destination = "build/less/example.css"
+		Plugin = "less"
+		Source = "src/less/example.less"
+	[Projects.exampletypescript]
+		Compress = true
+		Destination = "build/typescript/example.js"
+		Plugin = "typescript"
+		Source = "src/typescript/example/example.ts"
+		Target = "ES5"
+	[Projects.noodles]
+		Destination = "build/noodles"
+		Plugin = "go"
+		Source = "src/noodles/*.go"
+	[Projects.noodlestest]
+		Destination = "build/test-recursion/noodles"
+		Plugin = "go"
+		Source = "src/noodles/*.go"

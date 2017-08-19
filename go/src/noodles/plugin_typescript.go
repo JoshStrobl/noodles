@@ -39,23 +39,29 @@ func init() {
 
 // Typescript is our plugin functionality for compilation of TypeScript into Javascript.
 func (n *NoodlesProject) Typescript(project string) {
-	if !coreutils.ExecutableExists("tsc") { // If the tsc executable exists
+	if !coreutils.ExecutableExists("tsc") { // If the tsc executable does not exist
 		fmt.Println("tsc is not installed on your system. Please run noodles setup.")
 		return
 	}
 
-	if n.Destination == "" { // If no Destination is set
+	if n.Destination == "" { // If no custom Destination is set
 		n.Destination = filepath.Join("build", project+".js")
 	}
 
+	n.Mode = strings.ToLower(n.Mode) // Lowercase n.Mode
+
 	if n.Mode == "" || ((n.Mode != "simple") && (n.Mode != "advanced") && (n.Mode != "strict")) { // If no Mode is set, or is not set to a valid one
-		n.Mode = "Advanced" // Pick a reasonable middleground
+		n.Mode = "advanced" // Pick a reasonable middleground
 	}
 
-	defaultTargetArgs := []string{"--target", "ES5"}           // Set the default target to ES5
-	defaultOutFileArgs := []string{"--outFile", n.Destination} // Set the default outFile to build/{n}.js
+	if n.Source == "" { // If no source is defined
+		n.Source = filepath.Join("src", "typescript", project+".ts")
+	}
 
-	var modeTypeArgs []string // The mode we'll be using during compilation
+	if n.Target == "" || ((n.Target != "ES5") && (n.Target != "ES6") && (n.Target != "ES7")) { // If no Target is set or is not a valid one
+		n.Target = "ES5" // Set to ES5
+	}
+	var modeTypeArgs []string // The mode args we'll be using during compilation
 
 	switch n.Mode {
 	case "simple":
@@ -66,24 +72,13 @@ func (n *NoodlesProject) Typescript(project string) {
 		modeTypeArgs = StrictTypescriptCompilerOptions
 	}
 
-	if len(n.Flags) == 0 { // If no flags are set
-		n.Flags = append(defaultTargetArgs, defaultOutFileArgs...) // Set n.Flags to default target and outFile args
-	} else { // If flags are set
-		joinedFlags := strings.Join(n.Flags, " ")
+	tscFlags := append(modeTypeArgs, []string{ // Set tscFlags to the flags we'll pass to the Typescript copmiler
+		"--target", n.Target, // Add our target
+		"--outFile", n.Destination, // Add our destination
+		n.Source, // Add source
+	}...)
 
-		if !strings.Contains(joinedFlags, "--target") { // If no target is set
-			n.Flags = append(n.Flags, defaultTargetArgs...)
-		}
-
-		if !strings.Contains(joinedFlags, "--outFile") { // If no outFile is set
-			n.Flags = append(n.Flags, defaultOutFileArgs...)
-		}
-	}
-
-	n.Flags = append(modeTypeArgs, n.Flags...) // Prepend modeTypeArgs
-	n.Flags = append(n.Flags, n.Source)        // Append our source
-
-	commandOutput := coreutils.ExecCommand("tsc", n.Flags, false) // Call execCommand and get its commandOutput
+	commandOutput := coreutils.ExecCommand("tsc", tscFlags, false) // Call execCommand and get its commandOutput
 
 	if !strings.Contains(commandOutput, "error TS") { // If tsc did not report any errors
 		if n.Compress { // If we should minify the content

@@ -18,8 +18,10 @@ func ReadConfig() error {
 func SaveConfig() error {
 	var saveErr error
 	buffer := new(bytes.Buffer) // Create a buffer for the encoder
+	encoder := toml.NewEncoder(buffer) // Create a new toml encoder
+	encoder.Indent = "\t" // Use a tab because we're opinionated
 
-	if saveErr = toml.NewEncoder(buffer).Encode(noodles); saveErr == nil { // Encode our noodles struct into a buffer
+	if saveErr = encoder.Encode(noodles); saveErr == nil { // Encode our noodles struct into a buffer
 		saveErr = coreutils.WriteOrUpdateFile("noodles.toml", buffer.Bytes(), coreutils.NonGlobalFileMode) // Write the noodles.toml as non-global
 	}
 

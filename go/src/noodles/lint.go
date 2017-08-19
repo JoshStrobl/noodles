@@ -20,6 +20,7 @@ func lint(cmd *cobra.Command, args []string) {
 
 	if readErr == nil {
 		fmt.Println("noodles.toml appears correct.")
+		SaveConfig() // Save to ensure we enforce indentation
 	} else {
 		cleanMessage := CleanLintErrors(readErr.Error())
 		fmt.Printf("noodles.toml appears to have the following issue(s):\n%s\n", cleanMessage)

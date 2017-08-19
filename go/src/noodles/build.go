@@ -31,6 +31,8 @@ func BuildProject(name string) {
 		switch project.Plugin {
 		case "go": // Go
 			project.Go(name) // Run the Go plugin
+		case "less": // LESS
+			project.LESS(name) // Run the LESS plugin
 		case "typescript": // TypeScript
 			project.Typescript(name) // Run the TypeScript plugin
 		default: // Not a valid name
