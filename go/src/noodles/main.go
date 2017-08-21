@@ -50,6 +50,7 @@ func init() {
 	rootCmd.AddCommand(buildCmd)
 	rootCmd.AddCommand(lintCmd)
 	rootCmd.AddCommand(packCmd)
+	rootCmd.AddCommand(setupCmd)
 
 	// Persistent Flags
 	rootCmd.PersistentFlags().StringVarP(&project, "project", "p", "", "Project to apply for specific commands")

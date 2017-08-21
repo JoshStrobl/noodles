@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/stroblindustries/coreutils"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -91,20 +92,24 @@ func (n *NoodlesProject) Typescript(project string) {
 
 // MinifyJavaScript minifies the JavaScript using Google Closure Compiler and then proceed to attempt to provide a zopfli compressed version.
 func (n *NoodlesProject) MinifyJavaScript() {
-	if coreutils.ExecutableExists("ccjs") { // If the ccjs executable exists
+	if coreutils.ExecutableExists("uglifyjs2") { // If the uglifyjs2 executable exists
 		fmt.Println("Minifying compiled JavaScript.")
 
-		closureArgs := []string{ // Define closureArgs as
-			n.Destination,                              // Yes, I like to compress things.
-			"--compilation_level=SIMPLE_OPTIMIZATIONS", // Simple optimizations
-			"--warning_level=QUIET",                    // Shush you...
+		minifiedJSDestination := strings.Replace(n.Destination, ".js", ".min.js", -1) // Replace .js with .min.js
+		uglifyArgs := []string{ // Define uglifyArgs
+			n.Destination, // Input
+			"--compress", // Yes, I like to compress things
+			"--mangle", // Mangle variable names
+			"warnings=false", // Don't provide warnings
 		}
 
-		minifiedJSDestination := strings.Replace(n.Destination, ".js", ".min.js", -1) // Replace .js with .min.js
+		closureOutput := coreutils.ExecCommand("uglifyjs2", uglifyArgs, true)                                      // Run Google Closure Compiler and store the output in closureOutput
+		nodeDeprecationRemover, _ := regexp.Compile(`\(node\:.+\n`) // Remove any lines starting with (node:
+		closureOutput = nodeDeprecationRemover.ReplaceAllString(closureOutput, "")
+		closureOutput = strings.TrimSpace(closureOutput) // Fix trailing newlines
 
-		closureOutput := coreutils.ExecCommand("ccjs", closureArgs, true)                                      // Run Google Closure Compiler and store the output in closureOutput
 		coreutils.WriteOrUpdateFile(minifiedJSDestination, []byte(closureOutput), coreutils.NonGlobalFileMode) // Write or update the minified JS file content to build/lowercaseProjectName.min.js
-	} else { // If ccjs does not exist
-		fmt.Println("ccjs is not installed. Please run noodles setup.")
+	} else { // If uglifyjs2 does not exist
+		fmt.Println("uglifyjs2 is not installed. Please run noodles setup.")
 	}
 }
