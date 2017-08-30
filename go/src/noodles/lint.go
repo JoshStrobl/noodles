@@ -29,6 +29,10 @@ func lint(cmd *cobra.Command, args []string) {
 
 // CleanLintErrors will remove some verbosity from any unmarshalling error
 func CleanLintErrors(err string) string {
+	if strings.HasPrefix(err, "noodles") { // If this is already a custom error message
+		return err
+	}
+
 	cleanMessage := strings.Replace(err, "unmarshal", "convert", -1) // Change "unmarshal" to a human language
 	cleanMessage = strings.Replace(cleanMessage, "!!", "", -1)
 	cleanMessage = strings.Replace(cleanMessage, "`", "", -1) // Remove any ` wrapping types

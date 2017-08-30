@@ -2,8 +2,10 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"github.com/BurntSushi/toml"
 	"github.com/stroblindustries/coreutils"
+	"strings"
 )
 
 var noodles NoodlesConfig // Our Noodles Config
@@ -11,6 +13,11 @@ var noodles NoodlesConfig // Our Noodles Config
 // ReadConfig will read any local noodles.toml that exists and returns an error or NoodlesConfig
 func ReadConfig() error {
 	_, convErr := toml.DecodeFile(workdir+"noodles.toml", &noodles)
+
+	if convErr != nil && strings.Contains(convErr.Error(), "no such file or directory") {
+		convErr = errors.New("noodles.toml does not exist in this directory.")
+	}
+
 	return convErr
 }
 
