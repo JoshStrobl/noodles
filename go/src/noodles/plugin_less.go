@@ -43,7 +43,7 @@ func (n *NoodlesProject) LESS(project string) {
 
 	commandOutput := coreutils.ExecCommand("lessc", lessFlags, false) // Call execCommand and get its commandOutput
 
-	if !strings.Contains(commandOutput, "SyntaxError") { // If lessc reported syntax errors
+	if strings.Contains(commandOutput, "SyntaxError") { // If lessc reported syntax errors
 		fmt.Println(commandOutput)
 	}
 }

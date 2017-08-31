@@ -11,6 +11,7 @@ Version = 0.1
 	[Projects.exampletypescript]
 		Compress = true
 		Destination = "build/typescript/example.js"
+		Mode = "advanced"
 		Plugin = "typescript"
 		Source = "src/typescript/example/example.ts"
 		Target = "ES5"
