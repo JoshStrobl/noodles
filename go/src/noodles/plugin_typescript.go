@@ -96,15 +96,15 @@ func (n *NoodlesProject) MinifyJavaScript() {
 		fmt.Println("Minifying compiled JavaScript.")
 
 		minifiedJSDestination := strings.Replace(n.Destination, ".js", ".min.js", -1) // Replace .js with .min.js
-		uglifyArgs := []string{ // Define uglifyArgs
-			n.Destination, // Input
-			"--compress", // Yes, I like to compress things
-			"--mangle", // Mangle variable names
+		uglifyArgs := []string{                                                       // Define uglifyArgs
+			n.Destination,    // Input
+			"--compress",     // Yes, I like to compress things
+			"--mangle",       // Mangle variable names
 			"warnings=false", // Don't provide warnings
 		}
 
-		closureOutput := coreutils.ExecCommand("uglifyjs2", uglifyArgs, true)                                      // Run Google Closure Compiler and store the output in closureOutput
-		nodeDeprecationRemover, _ := regexp.Compile(`\(node\:.+\n`) // Remove any lines starting with (node:
+		closureOutput := coreutils.ExecCommand("uglifyjs2", uglifyArgs, true) // Run Google Closure Compiler and store the output in closureOutput
+		nodeDeprecationRemover, _ := regexp.Compile(`\(node\:.+\n`)           // Remove any lines starting with (node:
 		closureOutput = nodeDeprecationRemover.ReplaceAllString(closureOutput, "")
 		closureOutput = strings.TrimSpace(closureOutput) // Fix trailing newlines
 

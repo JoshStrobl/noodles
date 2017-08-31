@@ -58,7 +58,7 @@ func Setup(cmd *cobra.Command, args []string) {
 
 						if firstItem == "nodejs" { // If the first item is nodejs
 							PackageInstaller("system", []string{"nodejs"}) // Install nodejs before installing any NPM packages
-							dependenciesMissing = dependenciesMissing[1:] // Update dependenciesMissing to not include nodejs
+							dependenciesMissing = dependenciesMissing[1:]  // Update dependenciesMissing to not include nodejs
 						}
 
 						PackageInstaller("npm", dependenciesMissing) // Now install NPM packages
@@ -82,14 +82,14 @@ func HasDependencies(p NoodlesProject) (bool, []string) {
 
 	if p.Plugin != "go" { // If the plugin isn't Go
 		pluginDepMap := DependenciesMap[p.Plugin] // Get the dependency map for this plugin
-		binaries := []string{ pluginDepMap.Binary } // Set binaries to a slice of strings, where our initial string is our primary binary
+		binaries := []string{pluginDepMap.Binary} // Set binaries to a slice of strings, where our initial string is our primary binary
 
 		if p.Plugin == "typescript" && p.Compress { // If the project uses the Typescript plugin as well as compression (needs uglifyjs2)
-			binaries = append(binaries, []string{ "uglifyjs2" }...) // Include uglifyjs2 as well
+			binaries = append(binaries, []string{"uglifyjs2"}...) // Include uglifyjs2 as well
 		}
 
 		if depsExist = coreutils.ExecutableExists("npm"); !depsExist { // If npm exists
-			depsMissing = []string{ "nodejs" }
+			depsMissing = []string{"nodejs"}
 		}
 
 		for _, binary := range binaries { // For each binary
@@ -103,7 +103,7 @@ func HasDependencies(p NoodlesProject) (bool, []string) {
 		}
 	} else { // If plugin is Go
 		if depsExist = coreutils.ExecutableExists("go"); !depsExist { // If go does not exist
-			depsMissing = []string{ "go" }
+			depsMissing = []string{"go"}
 		}
 	}
 

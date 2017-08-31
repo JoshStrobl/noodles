@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"github.com/solus-project/xzed"
 	"github.com/spf13/cobra"
-	"github.com/stroblindustries/coreutils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 )
 
 var tmpDir string
@@ -21,6 +19,10 @@ var packCmd = &cobra.Command{
 	Short: "Package configured assets for all or a specified project",
 	Long:  "Package configured assets for all or a specified project into a distributable tarball",
 	Run:   pack,
+}
+
+func init() {
+	tmpDir = filepath.Join(workdir, ".noodles-pack")
 }
 
 // pack will package configured assets for a specified project into a tarball
@@ -36,27 +38,39 @@ func pack(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	now := strconv.FormatInt(time.Now().Unix(), 10) // Convert the current Unix time to a string
-	tmpDir = os.TempDir() + coreutils.Separator + "noodles-" + now + coreutils.Separator
+	if creationErr := os.Mkdir(tmpDir, 0755); creationErr != nil {
+		fmt.Printf("Failed to create our temporary directory:\n%s", creationErr.Error())
+		return
+	}
 
 	for projectName, project := range projectsToPack { // For each project
 		fmt.Println("Packing " + projectName)
 
 		if project.Plugin != "" { // If a plugin is defined
-			switch project.Plugin {
-			case "go":
-				if project.Binary { // If we're making a binary, copy it
-					relativePathToBuild, _ := filepath.Rel("build"+coreutils.Separator, project.Destination)
-					folders := filepath.Dir(project.Destination)
-					binaryName := filepath.Base(project.Destination)
+			projectDestFolder := filepath.Dir(project.Destination)
+			fileName := filepath.Base(project.Destination)
+			fileNameNoExt := strings.TrimSuffix(fileName, filepath.Ext(fileName))
 
-					if binaryName == relativePathToBuild { // If the binary is directly in build folder
-						coreutils.CopyFile(project.Destination, tmpDir+binaryName) // Copy the file
-					} else { // If is in an inner folder
-						childDirectoriesOfFolder := strings.TrimPrefix(folders, "build"+coreutils.Separator)
-						coreutils.CopyDirectory(folders, tmpDir+childDirectoriesOfFolder) // Copy the github.com/ulikunitz/xzdirectory instead
+			files := []string{fileName} // Have an array of files we should copy, at minimum the specified fileName
+
+			if project.TarballLocation == "" { // If no tarball location
+				fmt.Println("    No tarball location has been set for this project. We'll attempt to place this in a smart place.")
+
+				switch project.Plugin {
+				case "less":
+					project.TarballLocation = "css/"
+				case "typescript":
+					project.TarballLocation = "js/"
+					files = append(files, fileNameNoExt+".d.ts") // Add the definition file
+
+					if project.Compress {
+						files = append(files, fileNameNoExt+".min.js") // Add the minified file
 					}
 				}
+			}
+
+			for _, file := range files {
+				CopyFile(filepath.Join(projectDestFolder, file), filepath.Join(tmpDir, project.TarballLocation, file)) // Copy this specific file
 			}
 		}
 	}
@@ -103,7 +117,8 @@ func TarDirectory(writer *tar.Writer, directory string) {
 	if dir, openErr := os.Open(directory); openErr == nil { // Create an os.File struct via Open
 		if dirContents, readErr := dir.Readdirnames(-1); readErr == nil { // If there was no readErr
 			for _, fileName := range dirContents { // For each FileInfo struct in dirContents
-				if file, fileOpenErr := os.Open(directory + coreutils.Separator + fileName); fileOpenErr == nil {
+				filePath := filepath.Join(directory, fileName)
+				if file, fileOpenErr := os.Open(filePath); fileOpenErr == nil {
 					fileStats, _ := file.Stat()
 					fileHeader, fileHeaderErr := tar.FileInfoHeader(fileStats, "") // Create a new tar.Header
 
@@ -111,12 +126,12 @@ func TarDirectory(writer *tar.Writer, directory string) {
 						if fileStats.IsDir() { // If this is a directory
 							writer.WriteHeader(fileHeader) // Immediately write our fileHeader
 
-							TarDirectory(writer, directory+fileName)
+							TarDirectory(writer, filePath)
 						} else { // If this is a file
 							relativeFolderName, _ := filepath.Rel(tmpDir, directory)
 
 							if relativeFolderName != "." { // If we're not in the root directory of the tmpDir
-								fileHeader.Name = relativeFolderName + coreutils.Separator + fileName
+								fileHeader.Name = filepath.Join(relativeFolderName, fileName)
 							}
 
 							writer.WriteHeader(fileHeader) // Immediately write our fileHeader

@@ -22,3 +22,4 @@ Version = 0.1
 		Destination = "build/test-recursion/noodles"
 		Plugin = "go"
 		Source = "src/noodles/*.go"
+		TarballLocation = "test-recursion/"

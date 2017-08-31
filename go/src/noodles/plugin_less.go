@@ -13,7 +13,7 @@ import (
 var LessCompilerFlags []string
 
 func init() {
-	LessCompilerFlags = []string {
+	LessCompilerFlags = []string{
 		"--clean-css",
 		"--glob",
 		"--no-color",
@@ -38,12 +38,12 @@ func (n *NoodlesProject) LESS(project string) {
 		n.Source = filepath.Join("src/less/", project+".less")
 	}
 
-	lessFlags := LessCompilerFlags // Set lessFlags to our LessCompilerFlags
+	lessFlags := LessCompilerFlags                         // Set lessFlags to our LessCompilerFlags
 	lessFlags = append(lessFlags, n.Source, n.Destination) // Add our source and destination
 
 	commandOutput := coreutils.ExecCommand("lessc", lessFlags, false) // Call execCommand and get its commandOutput
 
 	if !strings.Contains(commandOutput, "SyntaxError") { // If lessc reported syntax errors
 		fmt.Println(commandOutput)
-	}	
+	}
 }
