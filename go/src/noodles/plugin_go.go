@@ -45,6 +45,8 @@ func (n *NoodlesProject) Go(project string) {
 		fmt.Println(strings.TrimSpace(goCompilerOutput))
 	} else { // If there was no obvious issues
 		fmt.Println("Build successful.")
+		os.Chdir(filepath.Dir(n.Source))
+		coreutils.ExecCommand("go", []string{"fmt"}, true) // Run formatting
 	}
 
 	ToggleGoEnv(false)
