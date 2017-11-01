@@ -14,6 +14,7 @@ type NoodlesConfig struct {
 	License     string
 	Name        string
 	Projects    map[string]NoodlesProject
+	Scripts     map[string]NoodlesScript
 	Version     float64
 }
 
@@ -30,4 +31,12 @@ type NoodlesProject struct {
 	Source          string
 	TarballLocation string `toml:"TarballLocation,omitempty"`
 	Target          string `toml:"Target,omitempty"`
+}
+
+// NoodlesScript is the configuration for a Noodles Script
+type NoodlesScript struct {
+	Arguments   []string `toml:"Arguments,omitempty"`
+	Description string   `toml:"Description,omitempty"`
+	Directory   string   `toml:"Directory,omitempty"`
+	Exec        string
 }

@@ -21,7 +21,7 @@ func (n *NoodlesProject) Go(project string) {
 
 	ToggleGoEnv(true)
 
-	os.Chdir(workdir + coreutils.Separator + "go") // Change to our go directory
+	os.Chdir(filepath.Join(workdir, "go")) // Change to our go directory
 
 	if n.Destination == "" { // If no destination is set
 		n.Destination = "build" + coreutils.Separator + project // Set destination to build/name (as binary)

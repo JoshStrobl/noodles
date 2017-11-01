@@ -24,3 +24,20 @@ Version = 0.1
 		Plugin = "go"
 		Source = "src/noodles/*.go"
 		TarballLocation = "test-recursion/"
+
+[Scripts]
+	[Scripts.argtest]
+		Args = ["build/", "*.toml"]
+		Description = "Script to test basic argument passing."
+		Exec = "ls"
+	[Scripts.dirnoexist]
+		Description = "Script to test directory change failure."
+		Directory = "idontexist"
+		Exec = "weshouldnevercallthis"
+	[Scripts.dirpwd]
+		Description = "Script to test basic directory changing."
+		Directory = "build"
+		Exec = "pwd"
+	[Scripts.whoami]
+		Description = "Script to test basic exec call by running whoami."
+		Exec = "whoami"
