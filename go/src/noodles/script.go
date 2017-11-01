@@ -24,7 +24,7 @@ func script(cmd *cobra.Command, args []string) {
 			if _, exists := noodles.Scripts[arg]; exists { // If this
 				RunScript(arg)
 			} else {
-				fmt.Printf("%s is not a valid script. Exiting.", arg)
+				fmt.Printf("%s is not a valid script. Exiting.\n", arg)
 				break
 			}
 		}
