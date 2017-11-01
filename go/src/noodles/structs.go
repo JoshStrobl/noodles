@@ -39,4 +39,6 @@ type NoodlesScript struct {
 	Description string   `toml:"Description,omitempty"`
 	Directory   string   `toml:"Directory,omitempty"`
 	Exec        string
+	File        string `toml:"File,omitempty"`
+	Redirect    bool   `toml:Redirect,omitempty"`
 }

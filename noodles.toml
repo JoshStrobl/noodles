@@ -27,7 +27,7 @@ Version = 0.1
 
 [Scripts]
 	[Scripts.argtest]
-		Args = ["build/", "*.toml"]
+		Arguments = ["build/"]
 		Description = "Script to test basic argument passing."
 		Exec = "ls"
 	[Scripts.dirnoexist]
@@ -38,6 +38,10 @@ Version = 0.1
 		Description = "Script to test basic directory changing."
 		Directory = "build"
 		Exec = "pwd"
+	[Scripts.testfile]
+		File = "build/testoutput"
+		Exec = "ls"
+		Redirect = true
 	[Scripts.whoami]
 		Description = "Script to test basic exec call by running whoami."
 		Exec = "whoami"

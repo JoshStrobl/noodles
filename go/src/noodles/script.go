@@ -8,6 +8,7 @@ import (
 	"github.com/stroblindustries/coreutils"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var scriptCmd = &cobra.Command{
@@ -16,6 +17,12 @@ var scriptCmd = &cobra.Command{
 	Short:   "Run a custom script",
 	Long:    "Run a custom script",
 	Run:     script,
+}
+
+var verbose bool
+
+func init() {
+	scriptCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose mode.")
 }
 
 func script(cmd *cobra.Command, args []string) {
@@ -57,11 +64,25 @@ func RunScript(name string) {
 
 			if failedToChange != nil { // If we failed to change to the directory
 				fmt.Printf("Failed to change to the following directory: %s\n", script.Directory)
-				fmt.Printf("Full error: %s\n", failedToChange)
+
+				if verbose {
+					fmt.Printf("Full error: %s\n", failedToChange)
+				}
+
+				return // Don't continue with exec
 			}
 		}
 
-		coreutils.ExecCommand(script.Exec, script.Arguments, false)
+		if verbose {
+			commandRunning := script.Exec + " " + (strings.Join(script.Arguments, " "))
+			fmt.Printf("Running: %s\n", commandRunning)
+		}
+
+		output := coreutils.ExecCommand(script.Exec, script.Arguments, script.Redirect)
+
+		if (script.File != "") && script.Redirect { // If we should redirect output to a file
+			coreutils.WriteOrUpdateFile(script.File, []byte(output), coreutils.NonGlobalFileMode)
+		}
 
 		os.Chdir(workdir) // Change back to the work dir if needed
 	} else {
