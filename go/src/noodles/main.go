@@ -3,14 +3,15 @@ package main
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"github.com/stroblindustries/coreutils"
 	"os"
-	"strings"
 )
 
-var project string              // Any project we're specifying for build
-var noodlesCondensedName string // Condensed Noodles name
-var workdir string              // Our working directory
+// Plugins
+var goPlugin GoPlugin
+var lessPlugin LessPlugin
+var typescriptPlugin TypeScriptPlugin
+
+var workdir string // Our working directory
 
 // Commands
 
@@ -22,13 +23,8 @@ var rootCmd = &cobra.Command{
 	- compilation of project(s) in a configurable, ordered manner
 	- configurable packing of project assets for distribution`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if cmd.Use != "init" { // If we're not initializing
+		if (cmd.Use != "new") || ((cmd.Use == "new") && (ListContains(args, "project") || ListContains(args, "script"))) { // If we're not creating a new Noodles workspace or we're creating a new project or script
 			ReadConfig() // Read the config
-
-			if noodles.Name != "" { // If Name is set
-				noodlesCondensedName = strings.ToLower(noodles.Name)                                          // Lowercase the noodles.Name
-				noodlesCondensedName = strings.Replace(strings.TrimSpace(noodlesCondensedName), " ", "_", -1) // Trim the project name and replace any whitespace with _
-			}
 		}
 	},
 }
@@ -39,22 +35,17 @@ func init() {
 	var getWdErr error
 	workdir, getWdErr = os.Getwd() // Get the current working directory
 
-	if getWdErr == nil {
-		workdir = workdir + coreutils.Separator
-	} else {
-		fmt.Println("Failed to get the current working directory.")
+	if getWdErr != nil { // If we failed to get the current working directory
+		fmt.Printf("Failed to get the current working directory: %s", getWdErr.Error())
 		os.Exit(1)
 	}
 
-	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(buildCmd)
 	rootCmd.AddCommand(lintCmd)
+	rootCmd.AddCommand(newCmd)
 	rootCmd.AddCommand(packCmd)
 	rootCmd.AddCommand(setupCmd)
 	rootCmd.AddCommand(scriptCmd)
-
-	// Persistent Flags
-	rootCmd.PersistentFlags().StringVarP(&project, "project", "p", "", "Project to apply for specific commands")
 }
 
 func main() {

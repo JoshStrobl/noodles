@@ -21,20 +21,23 @@ var packCmd = &cobra.Command{
 	Run:   pack,
 }
 
+var packProject string
+
 func init() {
 	tmpDir = filepath.Join(workdir, ".noodles-pack")
+	packCmd.Flags().StringVarP(&packProject, "project", "p", "", "Name of a project we're packing")
 }
 
 // pack will package configured assets for a specified project into a tarball
 func pack(cmd *cobra.Command, args []string) {
 	var projectsToPack map[string]NoodlesProject
 
-	if project == "" {
+	if packProject == "" {
 		fmt.Println("Packing all the things!")
 		projectsToPack = noodles.Projects
 	} else {
 		projectsToPack = map[string]NoodlesProject{
-			project: noodles.Projects[project],
+			packProject: noodles.Projects[packProject],
 		}
 	}
 
@@ -54,7 +57,7 @@ func pack(cmd *cobra.Command, args []string) {
 			files := []string{fileName} // Have an array of files we should copy, at minimum the specified fileName
 
 			if project.TarballLocation == "" { // If no tarball location
-				fmt.Println("    No tarball location has been set for this project. We'll attempt to place this in a smart place.")
+				fmt.Println("\tNo tarball location has been set for this project. We'll attempt to place this in a smart place.")
 
 				switch project.Plugin {
 				case "less":
@@ -81,6 +84,9 @@ func pack(cmd *cobra.Command, args []string) {
 
 // TarContents will create a tar file out of the contents of our temporary directory and save it to the corresponding .tar file
 func TarContents() {
+	noodlesCondensedName := strings.ToLower(noodles.Name)                                         // Lowercase the workspace name
+	noodlesCondensedName = strings.Replace(strings.TrimSpace(noodlesCondensedName), " ", "_", -1) // Trim whitespace and replace rest with _
+
 	version := strconv.FormatFloat(noodles.Version, 'f', -1, 64) // Convert our float64 noodles.Version to a version string
 	tarName := noodlesCondensedName + "-" + version + ".tar"
 	file, createErr := os.Create(tarName) // Create a .tar file with the condensed name and version (ex. noodles-0.1.tar)

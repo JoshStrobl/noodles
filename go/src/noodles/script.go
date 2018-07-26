@@ -11,6 +11,16 @@ import (
 	"strings"
 )
 
+// NoodlesScript is the configuration for a Noodles Script
+type NoodlesScript struct {
+	Arguments   []string `toml:"Arguments,omitempty"`
+	Description string   `toml:"Description,omitempty"`
+	Directory   string   `toml:"Directory,omitempty"`
+	Exec        string
+	File        string `toml:"File,omitempty"`
+	Redirect    bool   `toml:Redirect,omitempty"`
+}
+
 var scriptCmd = &cobra.Command{
 	Use:     "script",
 	Aliases: []string{"run-script"},

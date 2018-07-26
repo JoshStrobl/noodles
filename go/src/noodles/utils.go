@@ -3,10 +3,12 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // CopyFile will copy the source (file path) provided to the destination file
@@ -30,4 +32,45 @@ func CopyFile(source, destination string) error {
 	} else {
 		return fmt.Errorf("Failed to create %s: %s\n", destination, createErr.Error())
 	}
+}
+
+// IsValidGitRemote will try to determine whether the URL provided is a valid git remote URL
+func IsValidGitRemote(url string) bool {
+	return strings.HasSuffix(url, ".git")
+}
+
+// ListContains will check if a string array contains a substring
+func ListContains(list []string, substring string) bool {
+	var contains bool
+
+	for _, s := range list {
+		if strings.Contains(s, substring) {
+			contains = true
+			break
+		}
+	}
+
+	return contains
+}
+
+// PromptErrorCheck will check if we have a valid error from a prompt and if so, display and exit.
+func PromptErrorCheck(promptErr error) {
+	if promptErr != nil { // If we failed to get the prompt result
+		fmt.Printf("Failed to get the answer to our prompt: %s\n", promptErr.Error())
+		os.Exit(1)
+	}
+}
+
+// PromptExtensionValidate will check the provided input (provided via promptui) and return an error if a path does not contain a specific extension
+func PromptExtensionValidate(expectedType, input string) error {
+	var promptExtensionError error
+
+	extension := filepath.Ext(input)                                                    // Get the extension
+	projectExtension := strings.ToLower(strings.Replace(input, "TypeScript", "ts", -1)) // Replace TypeScript with ts and ensure lowercase for Go and LESS
+
+	if extension[1:] != projectExtension { // If the extension provided by input (minus the prepended .) is not what we're expecting
+		promptExtensionError = errors.New("Source must be a specific " + expectedType + " file, or a glob (*." + projectExtension + ").")
+	}
+
+	return promptExtensionError
 }

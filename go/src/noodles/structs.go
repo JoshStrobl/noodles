@@ -1,44 +1,39 @@
 package main
 
-// DependencyMap
-// Describes the dependencies you'll need and whether you need them from the system package manager or a separate packaging system
-type DependencyMap struct {
-	Binary       string
-	Dependencies []string
-	Packager     string
-}
-
-// NoodlesConfig is the configuration of global properties of Noodles.
-type NoodlesConfig struct {
-	Description string
-	License     string
-	Name        string
-	Projects    map[string]NoodlesProject
-	Scripts     map[string]NoodlesScript
-	Version     float64
-}
-
 // NoodlesProject is the configuration for Noodles Projects.
 type NoodlesProject struct {
+	AppendHash      bool `toml:"AppendHash,omitempty"`
 	Binary          bool `toml:"Binary,omitempty"`
 	Compress        bool `toml:"Compress,omitempty"`
 	Destination     string
 	Flags           []string
-	Frala           bool   `toml:"Frala,omitempty"`
 	Mode            string `toml:"Mode,omitempty"`
 	Plugin          string
 	Requires        []string
+	SimpleName      string `toml:"SimpleName,omitempty"`
 	Source          string
 	TarballLocation string `toml:"TarballLocation,omitempty"`
 	Target          string `toml:"Target,omitempty"`
 }
 
-// NoodlesScript is the configuration for a Noodles Script
-type NoodlesScript struct {
-	Arguments   []string `toml:"Arguments,omitempty"`
-	Description string   `toml:"Description,omitempty"`
-	Directory   string   `toml:"Directory,omitempty"`
-	Exec        string
-	File        string `toml:"File,omitempty"`
-	Redirect    bool   `toml:Redirect,omitempty"`
+// NoodlesPlugin is an interface for plugins to implement
+type NoodlesPlugin interface {
+	// Lint is a function that will check the values of various aspects of a NoodlesProject and make recommendations
+	Lint(n *NoodlesProject) NoodlesLintResult
+
+	// PreRun is a function that should be performed prior to primary compilation
+	PreRun(n *NoodlesProject) error
+
+	// PostRun is a function that should be performed after primary compilation
+	PostRun(n *NoodlesProject) error
+
+	// Run is the primary compilation function
+	Run(n *NoodlesProject) error
+}
+
+// NoodlesLintResult contains recommendations, hard requirements, deprecation notices, and more
+type NoodlesLintResult struct {
+	Deprecations    []string
+	Errors          []string
+	Recommendations []string
 }

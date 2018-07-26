@@ -7,21 +7,25 @@ Version = 0.1
 	[Projects.exampleless]
 		Destination = "build/less/example.css"
 		Plugin = "less"
+		SimpleName = "exampleless"
 		Source = "src/less/example.less"
 	[Projects.exampletypescript]
 		Compress = true
 		Destination = "build/typescript/example.js"
 		Mode = "advanced"
 		Plugin = "typescript"
+		SimpleName = "exampletypescript"
 		Source = "src/typescript/example/example.ts"
 		Target = "ES5"
 	[Projects.noodles]
 		Destination = "build/noodles"
 		Plugin = "go"
+		SimpleName = "noodles"
 		Source = "src/noodles/*.go"
 	[Projects.noodlestest]
 		Destination = "build/test-recursion/noodles"
 		Plugin = "go"
+		SimpleName = "noodlestest"
 		Source = "src/noodles/*.go"
 		TarballLocation = "test-recursion/"
 
@@ -45,3 +49,20 @@ Version = 0.1
 	[Scripts.whoami]
 		Description = "Script to test basic exec call by running whoami."
 		Exec = "whoami"
+
+[Vendors]
+	[Vendors.cobra]
+		Remote = "https://github.com/spf13/cobra.git"
+		Tag = "0.0.1"
+		Type = "go"
+	[Vendors.coreutils]
+		Remote = "https://github.com/stroblindustries/coreutils.git"
+		Type = "go"
+	[Vendors.toml]
+		Commit = "a368813c5e648fee92e5f6c30e3944ff9d5e8895"
+		Remote = "https://github.com/BurntSushi/toml.git"
+		Type = "go"
+	[Vendors.xzed]
+		Commit = "4d6e346cbe171a77e7640cc56a28662574ad59a1"
+		Remote = "https://github.com/solus-project/xzed.git"
+		Type = "go"

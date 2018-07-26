@@ -1,21 +1,45 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"github.com/BurntSushi/toml"
 	"github.com/stroblindustries/coreutils"
+	"path/filepath"
+	"regexp"
 	"strings"
 )
+
+// NoodlesConfig is the configuration of global properties of Noodles.
+type NoodlesConfig struct {
+	Description string
+	License     string
+	Name        string
+	Projects    map[string]NoodlesProject
+	Scripts     map[string]NoodlesScript
+	Version     float64
+}
 
 var noodles NoodlesConfig // Our Noodles Config
 
 // ReadConfig will read any local noodles.toml that exists and returns an error or NoodlesConfig
 func ReadConfig() error {
-	_, convErr := toml.DecodeFile(workdir+"noodles.toml", &noodles)
+	_, convErr := toml.DecodeFile(filepath.Join(workdir, "noodles.toml"), &noodles)
 
-	if convErr != nil && strings.Contains(convErr.Error(), "no such file or directory") {
-		convErr = errors.New("noodles.toml does not exist in this directory.")
+	if convErr != nil { // If there was an error decoding
+		if strings.Contains(convErr.Error(), "no such file or directory") {
+			convErr = errors.New("noodles.toml does not exist in this directory.")
+		} else { // If this is some sort of other error, sanitize it and return a new convErr
+			sanitizedErrMessage := strings.Replace(convErr.Error(), "unmarshal", "convert", -1) // Change "unmarshal" to a human language
+			sanitizedErrMessage = strings.Replace(sanitizedErrMessage, "!!", "", -1)
+			sanitizedErrMessage = strings.Replace(sanitizedErrMessage, "`", "", -1) // Remove any ` wrapping types
+
+			re := regexp.MustCompile(`line\s\d+:\s[\s\S]+$`)                                    // Only get line N: message
+			lineErrors := re.FindAllString(sanitizedErrMessage, -1)                             // Find all strings
+			sanitizedErrMessage = strings.Replace(strings.Join(lineErrors, "\n"), "  ", "", -1) // Join all with newline and remove unnecessary whitespace
+			convErr = errors.New(sanitizedErrMessage)                                           // Create a sanitized error
+		}
 	}
 
 	return convErr
@@ -24,8 +48,9 @@ func ReadConfig() error {
 // SaveConfig will save the NoodlesConfig to noodles.toml
 func SaveConfig() error {
 	var saveErr error
-	buffer := new(bytes.Buffer)        // Create a buffer for the encoder
-	encoder := toml.NewEncoder(buffer) // Create a new toml encoder
+	var buffer bytes.Buffer
+	writer := bufio.NewWriter(&buffer)
+	encoder := toml.NewEncoder(writer) // Create a new toml encoder
 	encoder.Indent = "\t"              // Use a tab because we're opinionated
 
 	if saveErr = encoder.Encode(noodles); saveErr == nil { // Encode our noodles struct into a buffer

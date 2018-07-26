@@ -8,6 +8,14 @@ import (
 	"strings"
 )
 
+// DependencyMap
+// Describes the dependencies you'll need and whether you need them from the system package manager or a separate packaging system
+type DependencyMap struct {
+	Binary       string
+	Dependencies []string
+	Packager     string
+}
+
 var setupCmd = &cobra.Command{
 	Use:   "setup",
 	Short: "Set up all or a specific project",
@@ -24,17 +32,24 @@ const PluginNowSetup = "%s is now set up."
 // PluginAlreadySetup is the message when a plugin has already been set up.
 const PluginAlreadySetup = "%s is already set up."
 
+var setupProject string
+
+func init() {
+	setupCmd.Flags().StringVarP(&setupProject, "project", "p", "", "Name of a project we're setting up")
+}
+
 // Setup will set up all or a specific project, checking for various binaries, dependencies, and attempt to install requirements.
 func Setup(cmd *cobra.Command, args []string) {
 	var projects map[string]NoodlesProject
 
-	if project != "" { // If a project has been specified
-		if projectInfo, exists := noodles.Projects[project]; exists {
+	if setupProject != "" { // If a project has been specified
+		if projectInfo, exists := noodles.Projects[setupProject]; exists {
 			projects = map[string]NoodlesProject{
-				project: projectInfo,
+				setupProject: projectInfo,
 			}
 		} else { // If project does not exist
-			fmt.Printf("%s is not a valid project.\n", project)
+			fmt.Printf("%s is not a valid project.\n", setupProject)
+			os.Exit(1)
 		}
 	} else { // If no project has been specified
 		projects = noodles.Projects
