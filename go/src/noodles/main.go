@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"github.com/spf13/cobra/doc"
 	"os"
+	"path/filepath"
 )
 
 // Plugins
@@ -31,6 +33,8 @@ var rootCmd = &cobra.Command{
 
 // Main
 
+var compileDocs bool
+
 func init() {
 	var getWdErr error
 	workdir, getWdErr = os.Getwd() // Get the current working directory
@@ -46,10 +50,38 @@ func init() {
 	rootCmd.AddCommand(packCmd)
 	rootCmd.AddCommand(setupCmd)
 	rootCmd.AddCommand(scriptCmd)
+	rootCmd.Flags().BoolVarP(&compileDocs, "compile-docs", "c", false, "Compiles Noodle documentation. Strictly for noodles usage, not by projects using noodles.")
 }
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
+	}
+
+	if compileDocs {
+		docsRootPath := filepath.Join(workdir, "docs")
+		manPagesPath := filepath.Join(docsRootPath, "man")
+		mdPagesPath := filepath.Join(docsRootPath, "md")
+
+		err := doc.GenMarkdownTree(rootCmd, mdPagesPath) // Generate Markdown files
+
+		if err == nil {
+			fmt.Println("Successfully generated Markdown pages.")
+		} else {
+			fmt.Printf("Failed to compile Markdown pages: %s\n", err.Error())
+		}
+
+		manHeader := &doc.GenManHeader{ // Create our header
+			Title:   "noodles",
+			Section: "1", // General commands
+		}
+
+		err = doc.GenManTree(rootCmd, manHeader, manPagesPath) // Generate Man pages
+
+		if err == nil {
+			fmt.Println("Successfully generated man pages.")
+		} else {
+			fmt.Printf("Failed to compile man pages: %s\n", err.Error())
+		}
 	}
 }
