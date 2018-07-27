@@ -94,16 +94,15 @@ func new(cmd *cobra.Command, args []string) {
 
 // NewWorkspacePrompt will handle the necessary workspace configuration prompts
 func NewWorkspacePrompt() {
-	var properties = map[string]string{ // Create a map of properties to ask for
-		"name":        "Name of Workspace",
-		"description": "Description of Workspace",
-		"license":     "License",
-		"version":     "Version",
-	}
+
+	properties := []string{"name", "description", "license", "version"}
+	labels := []string{"Name of Workspace", "Description of Workspace", "License", "Version"}
 
 	var promptProperties = map[string]string{} // Set promptProperties to an empty map
 
-	for key, label := range properties {
+	for index, key := range properties {
+		label := labels[index]
+
 		var validate func(input string) error
 
 		if key != "version" { // If we're not needing to use a validate func
