@@ -5,6 +5,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/stroblindustries/coreutils"
 	"io"
 	"os"
 	"path/filepath"
@@ -65,12 +66,46 @@ func PromptErrorCheck(promptErr error) {
 func PromptExtensionValidate(expectedType, input string) error {
 	var promptExtensionError error
 
-	extension := filepath.Ext(input)                                                    // Get the extension
-	projectExtension := strings.ToLower(strings.Replace(input, "TypeScript", "ts", -1)) // Replace TypeScript with ts and ensure lowercase for Go and LESS
+	extension := filepath.Ext(input)                                                           // Get the extension
+	projectExtension := strings.ToLower(strings.Replace(expectedType, "TypeScript", "ts", -1)) // Replace TypeScript with ts and ensure lowercase for Go and LESS
 
-	if extension[1:] != projectExtension { // If the extension provided by input (minus the prepended .) is not what we're expecting
-		promptExtensionError = errors.New("Source must be a specific " + expectedType + " file, or a glob (*." + projectExtension + ").")
+	if len(input) > 0 && extension != "" { // If we've provided input
+		if extension[1:] != projectExtension { // If the extension provided by input (minus the prepended .) is not what we're expecting
+			promptExtensionError = errors.New("Source must be a specific " + expectedType + " file, or a glob (*." + projectExtension + ").")
+		}
 	}
 
 	return promptExtensionError
+}
+
+// TextPromptValidate will get the requested input based on the message and validate it against our validate func
+func TextPromptValidate(message string, validate validateFunc) string {
+	var response string
+
+	for {
+		localResp := coreutils.InputMessage(message) // Get our input
+		err := validate(localResp)
+
+		if err == nil {
+			response = localResp
+			break
+		} else {
+			fmt.Println(err.Error())
+		}
+	}
+
+	return response
+}
+
+// TextYNValidate will check if the provided input is a yes / no or y/n
+func TextYNValidate(input string) error {
+	var err error
+
+	input = strings.ToLower(input)
+
+	if (input != "yes") && (input != "y") && (input != "no") && (input != "n") {
+		err = errors.New("Not a valid response. Must be a yes or no response.")
+	}
+
+	return err
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+	"github.com/stroblindustries/coreutils"
 	"os"
 	"strconv"
 )
@@ -35,7 +36,7 @@ func new(cmd *cobra.Command, args []string) {
 
 		NewWorkspacePrompt() // Perform our workspace prompting
 	} else {
-		if noodles.Name != "" { // Noodles workspace doesn't seem to exist
+		if noodles.Name == "" { // Noodles workspace doesn't seem to exist
 			fmt.Println("No Noodles workspace appears to exist. Please create a workspace first.")
 			os.Exit(1)
 		}
@@ -50,19 +51,11 @@ func new(cmd *cobra.Command, args []string) {
 				_, plugin, pluginPromptErr := pluginPrompt.Run() // Run our plugin selection
 				PromptErrorCheck(pluginPromptErr)
 
-				sourcePrompt := promptui.Prompt{ // Create a prompt asking for the source
-					Label: "Source(s)",
-					Validate: func(input string) error {
-						return PromptExtensionValidate(plugin, input)
-					},
-				}
+				source := TextPromptValidate("Source(s)", func(input string) error {
+					return PromptExtensionValidate(plugin, input)
+				})
 
-				source, sourcePromptErr := sourcePrompt.Run()
-				PromptErrorCheck(sourcePromptErr)
-
-				destinationPrompt := promptui.Prompt{Label: "Destination"} // Create a prompt asking for the destination
-				destination, destinationPromptErr := destinationPrompt.Run()
-				PromptErrorCheck(destinationPromptErr)
+				destination := coreutils.InputMessage("Destination")
 
 				project := NoodlesProject{
 					Destination: destination,
@@ -81,6 +74,9 @@ func new(cmd *cobra.Command, args []string) {
 					TypeScriptProjectPrompt(&project)
 					break
 				}
+
+				noodles.Projects[newProjectName] = project
+				SaveConfig()
 			} else { // Project is already set
 				fmt.Println("Project is already defined. Please choose another project name.")
 				os.Exit(1)
@@ -108,40 +104,32 @@ func NewWorkspacePrompt() {
 	var promptProperties = map[string]string{} // Set promptProperties to an empty map
 
 	for key, label := range properties {
-		var prompt promptui.Prompt
+		var validate func(input string) error
 
 		if key != "version" { // If we're not needing to use a validate func
-			prompt = promptui.Prompt{
-				Label: label,
-				Validate: func(input string) error {
-					var err error
+			validate = func(input string) error {
+				var err error
 
-					if len(input) == 0 { // If there is no input string
-						err = errors.New("A non-empty value is required for this field.")
-					}
+				if len(input) == 0 { // If there is no input string
+					err = errors.New("A non-empty value is required for this field.")
+				}
 
-					return err
-				},
+				return err
 			}
 		} else {
-			prompt = promptui.Prompt{
-				Label: label,
-				Validate: func(input string) error {
-					var err error
-					_, convErr := strconv.ParseFloat(input, 64) // Attempt to just do a conversion
+			validate = func(input string) error {
+				var err error
+				_, convErr := strconv.ParseFloat(input, 64) // Attempt to just do a conversion
 
-					if convErr != nil {
-						err = errors.New("Invalid Version Number.")
-					}
+				if convErr != nil {
+					err = errors.New("Invalid Version Number.")
+				}
 
-					return err
-				},
+				return err
 			}
 		}
 
-		val, promptErr := prompt.Run() // Run our prompt
-
-		PromptErrorCheck(promptErr)
+		val := TextPromptValidate(label, validate)
 		promptProperties[key] = val // Set this property in promptProperties
 	}
 
@@ -162,13 +150,7 @@ func NewWorkspacePrompt() {
 
 // GoProjectPrompt will provide the necessary project prompts for a Go project
 func GoProjectPrompt(project *NoodlesProject) {
-	binaryPrompt := promptui.Prompt{
-		Label:     "Is A Binary",
-		IsConfirm: true, // Sets it to a y/N question
-	}
-
-	isBinaryVal, binaryPromptErr := binaryPrompt.Run()
-	PromptErrorCheck(binaryPromptErr)
+	isBinaryVal := TextPromptValidate("Is A Binary [y/N]", TextYNValidate)
 
 	isBinary := (isBinaryVal == "y") || (isBinaryVal == "yes")
 	project.Binary = isBinary
@@ -176,39 +158,17 @@ func GoProjectPrompt(project *NoodlesProject) {
 
 // LessProjectPrompt will provide the necessary project prompts for a LESS project
 func LESSProjectPrompt(project *NoodlesProject) {
-	appendHashPrompt := promptui.Prompt{
-		Label:     "Append SHA256SUM to end of filename",
-		Default:   "n",
-		IsConfirm: true,
-	}
-
-	appendHashVal, appendHashPromptErr := appendHashPrompt.Run()
-	PromptErrorCheck(appendHashPromptErr)
+	appendHashVal := TextPromptValidate("Append SHA256SUM to end of file name [y/N]", TextYNValidate)
 
 	project.AppendHash = (appendHashVal == "y") || (appendHashVal == "yes")
 }
 
 // TypeScriptProjectPrompt will provide the necessary project prompts for a TypeScript project
 func TypeScriptProjectPrompt(project *NoodlesProject) {
-	appendHashPrompt := promptui.Prompt{
-		Label:     "Append SHA256SUM to end of filename",
-		Default:   "n",
-		IsConfirm: true,
-	}
-
-	appendHashVal, appendHashPromptErr := appendHashPrompt.Run()
-	PromptErrorCheck(appendHashPromptErr)
-
+	appendHashVal := TextPromptValidate("Append SHA256SUM to end of file name [y/N]", TextYNValidate)
 	project.AppendHash = (appendHashVal == "y") || (appendHashVal == "yes")
 
-	compressPrompt := promptui.Prompt{
-		Label:     "Compress / Minified JavaScript",
-		Default:   "y",
-		IsConfirm: true,
-	}
-
-	isCompressVal, compressPromptErr := compressPrompt.Run()
-	PromptErrorCheck(compressPromptErr)
+	isCompressVal := TextPromptValidate("Compress / Minified JavaScript [y/N]", TextYNValidate)
 	project.Compress = (isCompressVal == "y") || (isCompressVal == "yes")
 
 	modePrompt := promptui.Select{

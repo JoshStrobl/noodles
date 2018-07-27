@@ -25,9 +25,7 @@ var rootCmd = &cobra.Command{
 	- compilation of project(s) in a configurable, ordered manner
 	- configurable packing of project assets for distribution`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if (cmd.Use != "new") || ((cmd.Use == "new") && (ListContains(args, "project") || ListContains(args, "script"))) { // If we're not creating a new Noodles workspace or we're creating a new project or script
-			ReadConfig() // Read the config
-		}
+		ReadConfig() // Read the config (if it exists)
 	},
 }
 

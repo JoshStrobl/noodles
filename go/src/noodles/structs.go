@@ -37,3 +37,5 @@ type NoodlesLintResult struct {
 	Errors          []string
 	Recommendations []string
 }
+
+type validateFunc func(string) error
