@@ -8,6 +8,7 @@ import (
 	"github.com/stroblindustries/coreutils"
 	"os"
 	"strconv"
+	"strings"
 )
 
 var newCmd = &cobra.Command{
@@ -43,47 +44,14 @@ func new(cmd *cobra.Command, args []string) {
 
 		if newProjectName != "" { // If a project is set
 			if _, exists := noodles.Projects[newProjectName]; !exists { // If the project isn't already set
-				pluginPrompt := promptui.Select{
-					Label: "Plugin",
-					Items: []string{"Go", "Less", "TypeScript"},
-				}
-
-				_, plugin, pluginPromptErr := pluginPrompt.Run() // Run our plugin selection
-				PromptErrorCheck(pluginPromptErr)
-
-				source := TextPromptValidate("Source(s)", func(input string) error {
-					return PromptExtensionValidate(plugin, input)
-				})
-
-				destination := coreutils.InputMessage("Destination")
-
-				project := NoodlesProject{
-					Destination: destination,
-					Plugin:      plugin,
-					Source:      source,
-				}
-
-				switch plugin {
-				case "Go":
-					GoProjectPrompt(&project)
-					break
-				case "LESS":
-					LESSProjectPrompt(&project)
-					break
-				case "TypeScript":
-					TypeScriptProjectPrompt(&project)
-					break
-				}
-
-				noodles.Projects[newProjectName] = project
-				SaveConfig()
+				NewProjectPrompt(newProjectName) // Perform our project prompting
 			} else { // Project is already set
 				fmt.Println("Project is already defined. Please choose another project name.")
 				os.Exit(1)
 			}
 		} else if newScriptName != "" { // If a script is set
 			if _, exists := noodles.Scripts[newScriptName]; !exists { // If the script isn't already set
-
+				NewScriptPrompt(newScriptName) // Perform our script prompting
 			} else { // Script is already set
 				fmt.Println("Script is already defined. Please choose another script name.")
 				os.Exit(1)
@@ -147,28 +115,64 @@ func NewWorkspacePrompt() {
 	}
 }
 
+// NewProjectPrompt will handle the necessary project creation prompts
+func NewProjectPrompt(newProjectName string) {
+	pluginPrompt := promptui.Select{
+		Label: "Plugin",
+		Items: []string{"Go", "Less", "TypeScript"},
+	}
+
+	_, plugin, pluginPromptErr := pluginPrompt.Run() // Run our plugin selection
+	PromptErrorCheck(pluginPromptErr)
+
+	source := TextPromptValidate("Source(s)", func(input string) error {
+		return PromptExtensionValidate(plugin, input)
+	})
+
+	destination := coreutils.InputMessage("Destination")
+
+	project := NoodlesProject{
+		Destination: destination,
+		Plugin:      plugin,
+		Source:      source,
+	}
+
+	switch plugin {
+	case "Go":
+		GoProjectPrompt(&project)
+		break
+	case "LESS":
+		LESSProjectPrompt(&project)
+		break
+	case "TypeScript":
+		TypeScriptProjectPrompt(&project)
+		break
+	}
+
+	noodles.Projects[newProjectName] = project
+	SaveConfig()
+}
+
 // GoProjectPrompt will provide the necessary project prompts for a Go project
 func GoProjectPrompt(project *NoodlesProject) {
 	isBinaryVal := TextPromptValidate("Is A Binary [y/N]", TextYNValidate)
-
-	isBinary := (isBinaryVal == "y") || (isBinaryVal == "yes")
-	project.Binary = isBinary
+	project.Binary = IsYes(isBinaryVal)
 }
 
 // LessProjectPrompt will provide the necessary project prompts for a LESS project
 func LESSProjectPrompt(project *NoodlesProject) {
 	appendHashVal := TextPromptValidate("Append SHA256SUM to end of file name [y/N]", TextYNValidate)
 
-	project.AppendHash = (appendHashVal == "y") || (appendHashVal == "yes")
+	project.AppendHash = IsYes(appendHashVal)
 }
 
 // TypeScriptProjectPrompt will provide the necessary project prompts for a TypeScript project
 func TypeScriptProjectPrompt(project *NoodlesProject) {
 	appendHashVal := TextPromptValidate("Append SHA256SUM to end of file name [y/N]", TextYNValidate)
-	project.AppendHash = (appendHashVal == "y") || (appendHashVal == "yes")
+	project.AppendHash = IsYes(appendHashVal)
 
 	isCompressVal := TextPromptValidate("Compress / Minified JavaScript [y/N]", TextYNValidate)
-	project.Compress = (isCompressVal == "y") || (isCompressVal == "yes")
+	project.Compress = IsYes(isCompressVal)
 
 	modePrompt := promptui.Select{
 		Label: "Compiler Options Mode",
@@ -189,4 +193,63 @@ func TypeScriptProjectPrompt(project *NoodlesProject) {
 	PromptErrorCheck(targetPromptErr)
 
 	project.Target = targetPromptVal
+}
+
+// NewScriptPrompt will handle the necessary script creation prompts
+func NewScriptPrompt(newScriptName string) {
+	description := coreutils.InputMessage("Description") // Get the description of the project
+	executable := TextPromptValidate("Executable", func(input string) error {
+		var execExistsErr error
+
+		if !coreutils.ExecutableExists(input) {
+			execExistsErr = errors.New("Executable does not exist")
+		}
+
+		return execExistsErr
+	})
+
+	argumentsString := coreutils.InputMessage("Arguments (comma separated, optional)")
+	argumentsRaw := strings.SplitN(argumentsString, ",", -1) // Split our arguments by comma
+	arguments := []string{}
+
+	if len(argumentsRaw) != 0 { // If there are arguments
+		for _, arg := range argumentsRaw {
+			arguments = append(arguments, strings.TrimSpace(arg)) // Trim the space around this argument
+		}
+	}
+
+	directory := TextPromptValidate("Directory to run script (default is noodles root directory)", func(input string) error {
+		var dirExistsErr error
+
+		if input == "" { // Default
+			input = workdir
+		}
+
+		if !coreutils.IsDir(input) {
+			dirExistsErr = errors.New("Directory does not exist.")
+		}
+
+		return dirExistsErr
+	})
+
+	redirectOutput := TextPromptValidate("Redirect output to file [y/N]", TextYNValidate)
+	redirect := IsYes(redirectOutput)
+
+	var file string
+
+	if redirect { // If we should redirect output to a file
+		file = coreutils.InputMessage("File path and name")
+	}
+
+	script := NoodlesScript{
+		Arguments:   arguments,
+		Description: description,
+		Directory:   directory,
+		Exec:        executable,
+		File:        file,
+		Redirect:    redirect,
+	}
+
+	noodles.Scripts[newScriptName] = script
+	SaveConfig()
 }

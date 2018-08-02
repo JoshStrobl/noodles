@@ -1,5 +1,12 @@
 package main
 
+// NoodlesLintResult contains recommendations, hard requirements, deprecation notices, and more
+type NoodlesLintResult struct {
+	Deprecations    []string
+	Errors          []string
+	Recommendations []string
+}
+
 // NoodlesProject is the configuration for Noodles Projects.
 type NoodlesProject struct {
 	AppendHash      bool `toml:"AppendHash,omitempty"`
@@ -31,11 +38,14 @@ type NoodlesPlugin interface {
 	Run(n *NoodlesProject) error
 }
 
-// NoodlesLintResult contains recommendations, hard requirements, deprecation notices, and more
-type NoodlesLintResult struct {
-	Deprecations    []string
-	Errors          []string
-	Recommendations []string
+// NoodlesScript is the configuration for a Noodles Script
+type NoodlesScript struct {
+	Arguments   []string `toml:"Arguments,omitempty"`
+	Description string   `toml:"Description,omitempty"`
+	Directory   string   `toml:"Directory,omitempty"`
+	Exec        string
+	File        string `toml:"File,omitempty"`
+	Redirect    bool   `toml:Redirect,omitempty"`
 }
 
 type validateFunc func(string) error

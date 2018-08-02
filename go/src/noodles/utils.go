@@ -40,6 +40,12 @@ func IsValidGitRemote(url string) bool {
 	return strings.HasSuffix(url, ".git")
 }
 
+// IsYes will check if the provided input is yes
+func IsYes(input string) bool {
+	input = strings.ToLower(input)
+	return (input == "y") || (input == "yes")
+}
+
 // ListContains will check if a string array contains a substring
 func ListContains(list []string, substring string) bool {
 	var contains bool
