@@ -45,7 +45,7 @@ type NoodlesScript struct {
 	Directory   string   `toml:"Directory,omitempty"`
 	Exec        string
 	File        string `toml:"File,omitempty"`
-	Redirect    bool   `toml:Redirect,omitempty"`
+	Redirect    bool   `toml:"Redirect,omitempty"`
 }
 
 type validateFunc func(string) error
