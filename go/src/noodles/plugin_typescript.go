@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/stroblindustries/coreutils"
+	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -96,13 +98,14 @@ func (t *TypeScriptPlugin) PreRun(n *NoodlesProject) error {
 
 // PostRun will perform compression if the project has enabled it
 func (t *TypeScriptPlugin) PostRun(n *NoodlesProject) error {
-	var postRun error
+	var postRunErr error
+	destDir := filepath.Dir(n.Destination)
+	fileNameWithoutExtension := strings.Replace(filepath.Base(n.Destination), filepath.Ext(n.Destination), "", -1) // Get the base name and remove the extension
 
 	if n.Compress { // If we should minify the content
 		fmt.Println("Minifying compiled JavaScript.")
 
-		minifiedJSDestination := strings.Replace(n.Destination, ".js", ".min.js", -1) // Replace .js with .min.js
-		uglifyArgs := []string{                                                       // Define uglifyArgs
+		uglifyArgs := []string{ // Define uglifyArgs
 			n.Destination,    // Input
 			"--compress",     // Yes, I like to compress things
 			"--mangle",       // Mangle variable names
@@ -114,10 +117,30 @@ func (t *TypeScriptPlugin) PostRun(n *NoodlesProject) error {
 		closureOutput = nodeDeprecationRemover.ReplaceAllString(closureOutput, "")
 		closureOutput = strings.TrimSpace(closureOutput) // Fix trailing newlines
 
-		postRun = coreutils.WriteOrUpdateFile(minifiedJSDestination, []byte(closureOutput), coreutils.NonGlobalFileMode) // Write or update the minified JS file content to build/lowercaseProjectName.min.js
+		var minifiedJSDestination string
+
+		if n.AppendHash { // If we should append the hash, just immediately set our minifiedJSDestination so we can skip our move step
+			hash := CreateHash([]byte(closureOutput))
+			minifiedJSDestination = filepath.Join(destDir, fileNameWithoutExtension+"-"+hash+".min.js")
+		} else {
+			minifiedJSDestination = filepath.Join(destDir, fileNameWithoutExtension+".min.js")
+		}
+
+		postRunErr = coreutils.WriteOrUpdateFile(minifiedJSDestination, []byte(closureOutput), coreutils.NonGlobalFileMode) // Write or update the minified JS file content to build/lowercaseProjectName.min.js
+	} else { // If we're not minifying the content
+		if n.AppendHash { // If we're appending the hash to the .js file
+			var fileContent []byte
+			fileContent, postRunErr = ioutil.ReadFile(n.Destination)
+
+			if postRunErr == nil { // No error during read
+				hash := CreateHash(fileContent)
+				newFileName := filepath.Join(destDir, fileNameWithoutExtension+"-"+hash+".js")
+				os.Rename(n.Destination, newFileName) // Rename the file
+			}
+		}
 	}
 
-	return postRun
+	return postRunErr
 }
 
 // Run will run our TypeScript compilation

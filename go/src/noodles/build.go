@@ -66,13 +66,11 @@ func BuildProject(name string) {
 			}
 		}
 
-		if project.Plugin != "less" { // If this isn't LESS, which lacks a post-run
-			fmt.Printf("Performing post-run for %s\n", name)
-			postRunErr := plugin.PostRun(&project)
+		fmt.Printf("Performing post-run for %s\n", name)
+		postRunErr := plugin.PostRun(&project)
 
-			if postRunErr != nil { // If there was an error during post-run
-				fmt.Printf("An error occured during post-run:\n%s\n", postRunErr.Error())
-			}
+		if postRunErr != nil { // If there was an error during post-run
+			fmt.Printf("An error occured during post-run:\n%s\n", postRunErr.Error())
 		}
 	} else {
 		fmt.Println(name + " is not a valid project")

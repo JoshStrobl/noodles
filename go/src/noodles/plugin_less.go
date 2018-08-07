@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"github.com/stroblindustries/coreutils"
+	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -51,7 +53,21 @@ func (l *LessPlugin) PreRun(n *NoodlesProject) error {
 
 // PostRun is just a stub function. Doesn't actually do anything at the moment
 func (l *LessPlugin) PostRun(n *NoodlesProject) error {
-	return nil
+	var postRunErr error
+
+	if n.AppendHash { // If we should append the hash
+		var fileContent []byte
+		fileContent, postRunErr = ioutil.ReadFile(n.Destination)
+
+		if postRunErr == nil { // No error during read
+			hash := CreateHash(fileContent)
+			fileNameWithoutExtension := strings.Replace(filepath.Base(n.Destination), filepath.Ext(n.Destination), "", -1) // Get the base name and remove the extension
+			newFileName := filepath.Join(filepath.Dir(n.Destination), fileNameWithoutExtension+"-"+hash+".css")
+			os.Rename(n.Destination, newFileName)
+		}
+	}
+
+	return postRunErr
 }
 
 // Run will compile our LESS into CSS

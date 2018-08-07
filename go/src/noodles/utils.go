@@ -3,6 +3,8 @@
 package main
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/stroblindustries/coreutils"
@@ -11,6 +13,15 @@ import (
 	"path/filepath"
 	"strings"
 )
+
+// CreateHash will create a sha1sum of the provided bytes
+func CreateHash(content []byte) string {
+	hasher := sha1.New()
+	hasher.Write(content)
+	hashBytes := hasher.Sum(nil)
+
+	return hex.EncodeToString(hashBytes)
+}
 
 // CopyFile will copy the source (file path) provided to the destination file
 func CopyFile(source, destination string) error {
