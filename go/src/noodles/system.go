@@ -66,19 +66,26 @@ func init() {
 
 // GetSystemPackageManager is responsible for returning the system's package manager, if any.
 func GetSystemPackageManager() string {
+	var pm string
+
 	if runtime.GOOS == "linux" { // If we're running Linux
 		packageManagers := []string{"apt", "dnf", "eopkg", "pacman", "zypper"}
 
 		for _, bin := range packageManagers {
 			if coreutils.ExecutableExists(bin) {
-				return bin
+				pm = bin
+				break
 			}
 		}
 
-		return "unknown" // If we've made it this far, we have no idea what this Linux user is using
+		if pm == "" { // If our package manager isn't set yet
+			pm = "unknown" // If we've made it this far, we have no idea what this Linux user is using
+		}
 	} else { // If we're not running Linux, don't even try (sorry, I'd love PRs for more support)
-		return "none"
+		pm = "none"
 	}
+
+	return pm
 }
 
 // PackageInstaller will install the necessary packages / dependencies with the package manager or npm

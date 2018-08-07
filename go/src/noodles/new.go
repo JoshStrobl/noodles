@@ -22,7 +22,7 @@ var newProjectName string
 var newScriptName string
 
 func init() {
-	newCmd.Flags().StringVarP(&newProjectName, "project", "p", "", "Name of a new project you wish to bootstrap.")
+	newCmd.Flags().StringVarP(&newProjectName, "project", "p", "", "Name of a new project you wish to bootstrap")
 	newCmd.Flags().StringVarP(&newScriptName, "script", "s", "", "Name of a new script you wish to bootstrap")
 }
 
@@ -30,7 +30,7 @@ func new(cmd *cobra.Command, args []string) {
 	if (newProjectName == "") && (newScriptName == "") { // If we're creating a new Noodles workspace
 		if configInfo, statErr := os.Stat("noodles.toml"); statErr == nil { // Check if noodles.toml already exists
 			if configInfo.Size() != 0 { // If the size of the file is greater than 0, meaning there is potentially content
-				fmt.Println("noodles.toml already exists and appears to have content. Exiting.")
+				fmt.Println("noodles.toml already exists and appears to have content. Exiting")
 				return
 			}
 		}
@@ -38,7 +38,7 @@ func new(cmd *cobra.Command, args []string) {
 		NewWorkspacePrompt() // Perform our workspace prompting
 	} else {
 		if noodles.Name == "" { // Noodles workspace doesn't seem to exist
-			fmt.Println("No Noodles workspace appears to exist. Please create a workspace first.")
+			fmt.Println("No Noodles workspace appears to exist. Please create a workspace first")
 			os.Exit(1)
 		}
 
@@ -78,7 +78,7 @@ func NewWorkspacePrompt() {
 				var err error
 
 				if len(input) == 0 { // If there is no input string
-					err = errors.New("A non-empty value is required for this field.")
+					err = errors.New("A non-empty value is required for this field")
 				}
 
 				return err
@@ -89,7 +89,7 @@ func NewWorkspacePrompt() {
 				_, convErr := strconv.ParseFloat(input, 64) // Attempt to just do a conversion
 
 				if convErr != nil {
-					err = errors.New("Invalid Version Number.")
+					err = errors.New("Invalid Version Number")
 				}
 
 				return err
@@ -159,7 +159,7 @@ func GoProjectPrompt(project *NoodlesProject) {
 	project.Binary = IsYes(isBinaryVal)
 }
 
-// LessProjectPrompt will provide the necessary project prompts for a LESS project
+// LESSProjectPrompt will provide the necessary project prompts for a LESS project
 func LESSProjectPrompt(project *NoodlesProject) {
 	appendHashVal := TextPromptValidate("Append SHA256SUM to end of file name [y/N]", TextYNValidate)
 
@@ -226,7 +226,7 @@ func NewScriptPrompt(newScriptName string) {
 		}
 
 		if !coreutils.IsDir(input) {
-			dirExistsErr = errors.New("Directory does not exist.")
+			dirExistsErr = errors.New("Directory does not exist")
 		}
 
 		return dirExistsErr

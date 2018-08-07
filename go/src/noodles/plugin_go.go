@@ -9,8 +9,7 @@ import (
 	"strings"
 )
 
-// This is the Go plugin
-
+// GoPlugin is our Go plugin
 type GoPlugin struct {
 }
 
@@ -36,7 +35,7 @@ func (p *GoPlugin) PreRun(n *NoodlesProject) error {
 	var preRunErr error
 
 	if !coreutils.ExecutableExists("go") { // If the go executable does not exist
-		preRunErr = errors.New("Go is not installed on your system. Please run noodles setup.")
+		preRunErr = errors.New("Go is not installed on your system. Please run noodles setup")
 	} else { // If the go executable exists
 		ToggleGoEnv(true) // Enable the Go environment
 	}
@@ -86,14 +85,15 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 
 // ToggleGoEnv will toggle our usage of GOPATH and working directory
 func ToggleGoEnv(on bool) error {
+	var toggleEnvErr error
 	if on {
 		originalGoPath = os.Getenv("GOPATH") // Store the original GOPATH
-		return os.Setenv("GOPATH", filepath.Join(workdir, "go"))
+		toggleEnvErr = os.Setenv("GOPATH", filepath.Join(workdir, "go"))
 	} else {
-		if err := os.Setenv("GOPATH", originalGoPath); err == nil { // If there was no error setting the environment
-			return os.Chdir(workdir)
-		} else {
-			return err
+		if toggleEnvErr = os.Setenv("GOPATH", originalGoPath); toggleEnvErr == nil { // If there was no error setting the environment
+			toggleEnvErr = os.Chdir(workdir)
 		}
 	}
+
+	return toggleEnvErr
 }

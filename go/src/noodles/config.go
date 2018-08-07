@@ -29,7 +29,7 @@ func ReadConfig() error {
 
 	if convErr != nil { // If there was an error decoding
 		if strings.Contains(convErr.Error(), "no such file or directory") {
-			convErr = errors.New("noodles.toml does not exist in this directory.")
+			convErr = errors.New("noodles.toml does not exist in this directory")
 		} else { // If this is some sort of other error, sanitize it and return a new convErr
 			sanitizedErrMessage := strings.Replace(convErr.Error(), "unmarshal", "convert", -1) // Change "unmarshal" to a human language
 			sanitizedErrMessage = strings.Replace(sanitizedErrMessage, "!!", "", -1)

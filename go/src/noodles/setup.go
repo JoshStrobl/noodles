@@ -8,8 +8,7 @@ import (
 	"strings"
 )
 
-// DependencyMap
-// Describes the dependencies you'll need and whether you need them from the system package manager or a separate packaging system
+// DependencyMap describes the dependencies you'll need and whether you need them from the system package manager or a separate packaging system
 type DependencyMap struct {
 	Binary       string
 	Dependencies []string

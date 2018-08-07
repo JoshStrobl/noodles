@@ -11,8 +11,7 @@ import (
 	"strings"
 )
 
-// This is the Typescript plugin
-
+// TypeScriptPlugin is our TypeScript plugin
 type TypeScriptPlugin struct {
 }
 
@@ -82,7 +81,7 @@ func (p *TypeScriptPlugin) Lint(n *NoodlesProject) NoodlesLintResult {
 }
 
 // PreRun will check if the necessary executables for TypeScript and compression are installed
-func (t *TypeScriptPlugin) PreRun(n *NoodlesProject) error {
+func (p *TypeScriptPlugin) PreRun(n *NoodlesProject) error {
 	var preRunErr error
 	executables := []string{"tsc", "uglifyjs2"}
 
@@ -97,7 +96,7 @@ func (t *TypeScriptPlugin) PreRun(n *NoodlesProject) error {
 }
 
 // PostRun will perform compression if the project has enabled it
-func (t *TypeScriptPlugin) PostRun(n *NoodlesProject) error {
+func (p *TypeScriptPlugin) PostRun(n *NoodlesProject) error {
 	var postRunErr error
 	destDir := filepath.Dir(n.Destination)
 	fileNameWithoutExtension := strings.Replace(filepath.Base(n.Destination), filepath.Ext(n.Destination), "", -1) // Get the base name and remove the extension
@@ -144,7 +143,7 @@ func (t *TypeScriptPlugin) PostRun(n *NoodlesProject) error {
 }
 
 // Run will run our TypeScript compilation
-func (t *TypeScriptPlugin) Run(n *NoodlesProject) error {
+func (p *TypeScriptPlugin) Run(n *NoodlesProject) error {
 	var runErr error
 
 	if n.Destination == "" { // If no custom Destination is set

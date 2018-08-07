@@ -25,25 +25,28 @@ func CreateHash(content []byte) string {
 
 // CopyFile will copy the source (file path) provided to the destination file
 func CopyFile(source, destination string) error {
+	var copyFileErr error
 	destinationFolder := filepath.Dir(destination) // Get the folders leading up to the file
 
 	if createDestFolderErr := os.MkdirAll(destinationFolder, 0755); createDestFolderErr != nil {
-		return fmt.Errorf("Failed to create %s: %s\n", destinationFolder, createDestFolderErr.Error())
+		copyFileErr = errors.New("Failed to create " + destinationFolder + ": " + createDestFolderErr.Error())
 	}
 
-	if destinationFile, createErr := os.OpenFile(destination, os.O_RDWR|os.O_CREATE, 0755); createErr == nil { // Create a file to copy the contents into
-		if sourceFile, openErr := os.OpenFile(source, os.O_RDONLY, 0755); openErr == nil {
-			io.Copy(destinationFile, sourceFile) // Copy the contents
-			sourceFile.Close()                   // Close project file
-			destinationFile.Close()              // Close the temporary destination file
-
-			return nil
+	if copyFileErr == nil {
+		if destinationFile, createErr := os.OpenFile(destination, os.O_RDWR|os.O_CREATE, 0755); createErr == nil { // Create a file to copy the contents into
+			if sourceFile, openErr := os.OpenFile(source, os.O_RDONLY, 0755); openErr == nil {
+				io.Copy(destinationFile, sourceFile) // Copy the contents
+				sourceFile.Close()                   // Close project file
+				destinationFile.Close()              // Close the temporary destination file
+			} else {
+				copyFileErr = errors.New("Failed to open " + source + ": " + openErr.Error())
+			}
 		} else {
-			return fmt.Errorf("Failed to open %s:\n\t%s\n", source, openErr.Error())
+			copyFileErr = errors.New("Failed to create " + destination + ": " + createErr.Error())
 		}
-	} else {
-		return fmt.Errorf("Failed to create %s: %s\n", destination, createErr.Error())
 	}
+
+	return copyFileErr
 }
 
 // IsValidGitRemote will try to determine whether the URL provided is a valid git remote URL
@@ -121,7 +124,7 @@ func TextYNValidate(input string) error {
 	input = strings.ToLower(input)
 
 	if (input != "yes") && (input != "y") && (input != "no") && (input != "n") {
-		err = errors.New("Not a valid response. Must be a yes or no response.")
+		err = errors.New("Must be a yes or no response")
 	}
 
 	return err

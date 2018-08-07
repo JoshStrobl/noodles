@@ -9,8 +9,7 @@ import (
 	"strings"
 )
 
-// This is the LESS plugin
-
+// LessPlugin is our LESS plugin
 type LessPlugin struct {
 	CompilerFlags []string
 }
@@ -41,18 +40,18 @@ func (p *LessPlugin) Lint(n *NoodlesProject) NoodlesLintResult {
 }
 
 // PreRun will check if the necessary lessc executable is installed
-func (l *LessPlugin) PreRun(n *NoodlesProject) error {
+func (p *LessPlugin) PreRun(n *NoodlesProject) error {
 	var preRunErr error
 
 	if !coreutils.ExecutableExists("lessc") { // If the lessc executable does not exist
-		preRunErr = errors.New("lessc is not installed on your system. Please run noodles setup.")
+		preRunErr = errors.New("lessc is not installed on your system. Please run noodles setup")
 	}
 
 	return preRunErr
 }
 
 // PostRun is just a stub function. Doesn't actually do anything at the moment
-func (l *LessPlugin) PostRun(n *NoodlesProject) error {
+func (p *LessPlugin) PostRun(n *NoodlesProject) error {
 	var postRunErr error
 
 	if n.AppendHash { // If we should append the hash
@@ -71,7 +70,7 @@ func (l *LessPlugin) PostRun(n *NoodlesProject) error {
 }
 
 // Run will compile our LESS into CSS
-func (l *LessPlugin) Run(n *NoodlesProject) error {
+func (p *LessPlugin) Run(n *NoodlesProject) error {
 	var runErr error
 
 	if n.Destination == "" { // If no Destination is set
