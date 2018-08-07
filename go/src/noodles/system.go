@@ -23,32 +23,32 @@ func init() {
 	CurrentUser = user.Username
 
 	DependenciesMap = map[string]DependencyMap{ // Map of all the deps you'll need based on project configuration options
-		"compress": DependencyMap{ // Compression for TypeScript
+		"compress": { // Compression for TypeScript
 			Binary:       "uglifyjs2",
 			Dependencies: []string{"uglify-js2"},
 			Packager:     "npm",
 		},
-		"go": DependencyMap{ // Golang
+		"go": { // Golang
 			Binary:       "go",
 			Dependencies: []string{"golang"},
 			Packager:     "system",
 		},
-		"html": DependencyMap{ // HTML
+		"html": { // HTML
 			Binary:       "html-minifier",
 			Dependencies: []string{"html-minifier"}, // Uses html-minifier to minify HTML (ya don't say?)
 			Packager:     "npm",
 		},
-		"less": DependencyMap{
+		"less": {
 			Binary:       "lessc",
 			Dependencies: []string{"less", "less-plugin-clean-css", "less-plugin-glob"}, // LESS, Clean CSS plugin, Glob plugin
 			Packager:     "npm",
 		},
-		"nodejs": DependencyMap{ // nodejs (for dependencies requiring npm)
+		"nodejs": { // nodejs (for dependencies requiring npm)
 			Binary:       "npm",
 			Dependencies: []string{"npm"},
 			Packager:     "system",
 		},
-		"typescript": DependencyMap{
+		"typescript": {
 			Binary:       "tsc",
 			Dependencies: []string{"typescript"}, // closurecompiler and Typescript are needed
 			Packager:     "npm",

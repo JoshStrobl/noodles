@@ -73,7 +73,7 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 		} else { // If there was no obvious issues
 			fmt.Println("Build successful.")
 			os.Chdir(filepath.Dir(n.Source))
-			coreutils.ExecCommand("go", []string{"fmt"}, true) // Run formatting
+			coreutils.ExecCommand("gofmt", []string{"-s", "-w", "*"}, true) // Run formatting
 		}
 	} else { // If we failed to create the necessary directories
 		fmt.Printf("Failed to create the necessary directories:\n%s\n", runErr.Error())
