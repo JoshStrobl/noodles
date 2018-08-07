@@ -20,7 +20,7 @@ func (p *GoPlugin) Lint(n *NoodlesProject) NoodlesLintResult {
 	results := make(NoodlesLintResult)
 
 	if !strings.HasSuffix(n.Source, "*.go") { // Globbing isn't enabled
-		results["Recommendations"] = []string { "Not using globbing for getting all Go files in this project. Recommend changing Sources to *.go." }
+		results["Recommendations"] = []string{"Not using globbing for getting all Go files in this project. Recommend changing Sources to *.go."}
 	}
 
 	return results
@@ -68,8 +68,12 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 			runErr = errors.New(strings.TrimSpace(goCompilerOutput))
 		} else { // If there was no obvious issues
 			fmt.Println("Build successful.")
-			os.Chdir(filepath.Dir(n.Source))
-			coreutils.ExecCommand("gofmt", []string{"-s", "-w", "*"}, true) // Run formatting
+			sourceDir := filepath.Dir(n.Source)
+			if goFiles, getErr := coreutils.GetFilesContains(sourceDir, ".go"); getErr == nil { // Get all files with .go extension
+				args := []string{"-s", "-w"}
+				args = append(args, goFiles...)
+				coreutils.ExecCommand("gofmt", args, false) // Run formatting
+			}
 		}
 	} else { // If we failed to create the necessary directories
 		fmt.Printf("Failed to create the necessary directories:\n%s\n", runErr.Error())

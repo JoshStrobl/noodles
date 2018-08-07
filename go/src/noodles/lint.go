@@ -40,7 +40,7 @@ func lint(cmd *cobra.Command, args []string) {
 
 			results := plugin.Lint(&project) // Lint the project, return our lint results
 
-			resultsTypes := []string { "Deprecations", "Errors", "Recommendation" }
+			resultsTypes := []string{"Deprecations", "Errors", "Recommendation"}
 
 			fmt.Printf("Linting %s:\n", name)
 
