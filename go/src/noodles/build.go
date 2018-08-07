@@ -51,7 +51,7 @@ func BuildProject(name string) {
 		preRunErr := plugin.PreRun(&project)
 
 		if preRunErr != nil { // If there was an error during pre-run
-			fmt.Printf("An error occured during pre-run checks:\n%s\n", preRunErr.Error())
+			fmt.Printf("An error occurred during pre-run checks:\n%s\n", preRunErr.Error())
 			return
 		}
 
@@ -59,7 +59,7 @@ func BuildProject(name string) {
 		runErr := plugin.Run(&project)
 
 		if runErr != nil { // If there was an error during run
-			fmt.Printf("An error occured during compilation:\n%s\n", runErr.Error())
+			fmt.Printf("An error occurred during compilation:\n%s\n", runErr.Error())
 
 			if project.Plugin != "go" { // If this isn't Go, where it's absolutely mandatory to do a GOPATH reset
 				return
@@ -70,7 +70,7 @@ func BuildProject(name string) {
 		postRunErr := plugin.PostRun(&project)
 
 		if postRunErr != nil { // If there was an error during post-run
-			fmt.Printf("An error occured during post-run:\n%s\n", postRunErr.Error())
+			fmt.Printf("An error occurred during post-run:\n%s\n", postRunErr.Error())
 		}
 	} else {
 		fmt.Println(name + " is not a valid project")
