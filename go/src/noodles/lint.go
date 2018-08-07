@@ -40,32 +40,26 @@ func lint(cmd *cobra.Command, args []string) {
 
 			results := plugin.Lint(&project) // Lint the project, return our lint results
 
-			if (len(results.Deprecations) == 0) && (len(results.Errors) == 0) && (len(results.Recommendations) == 0) { // No issues at all
-				fmt.Printf("%s has no issues.\n", name)
-			} else {
-				fmt.Printf("We found the following items that should be resolved with %s\n", name)
+			resultsTypes := []string { "Deprecations", "Errors", "Recommendation" }
 
-				if len(results.Deprecations) != 0 { // There are deprecations
-					fmt.Println("\tDeprecations:")
-					for _, deprecation := range results.Deprecations { // For each deprecation
-						fmt.Printf("\t\t%s\n", deprecation)
-					}
-				}
+			fmt.Printf("Linting %s:\n", name)
 
-				if len(results.Errors) != 0 { // There are errors
-					fmt.Println("\tErrors:")
-					for _, err := range results.Errors {
-						fmt.Printf("\t\t%s\n", err)
+			for _, resultType := range resultsTypes {
+				if resultList, exists := results[resultType]; exists { // This type exists
+					if len(resultList) != 0 { // There are items in this type
+						fmt.Printf("\t%s:\n", resultType)
+						for _, item := range resultList { // For each item
+							fmt.Printf("\t\t❌ %s\n", item)
+						}
+					} else {
+						fmt.Printf("\t%s: None\n", resultType)
 					}
-				}
-
-				if len(results.Recommendations) != 0 { // There are recommendations
-					fmt.Println("\tRecommendations:")
-					for _, recommendation := range results.Recommendations {
-						fmt.Printf("\t\t%s\n", recommendation)
-					}
+				} else {
+					fmt.Printf("\t%s: None\n", resultType)
 				}
 			}
+
+			fmt.Println()
 		} else if project.Plugin == "" && project.Requires == nil { // No Plugin or Requires are set
 			fmt.Printf("%s is missing a plugin definition.\n", name)
 		}

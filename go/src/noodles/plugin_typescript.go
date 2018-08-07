@@ -55,27 +55,31 @@ func init() {
 
 // Lint will check the specified project's settings related to our plugin
 func (p *TypeScriptPlugin) Lint(n *NoodlesProject) NoodlesLintResult {
-	results := NoodlesLintResult{
-		Deprecations:    []string{},
-		Errors:          []string{},
-		Recommendations: []string{},
-	}
+	results := make(NoodlesLintResult)
+
+	deprecations := []string{}
+	errors := []string{}
+	recommendations := []string{}
 
 	if !n.Compress { // Compression not enabled
-		results.Recommendations = append(results.Recommendations, "Compression is not enabled, meaning we will only generate a non-minified JS file. Recommended enabling Compress.")
+		recommendations = append(recommendations, "Compression is not enabled, meaning we will only generate a non-minified JS file. Recommended enabling Compress.")
 	}
 
 	if n.Mode == "" {
-		results.Recommendations = append(results.Recommendations, "No mode is set, meaning we'll default to Advanced flag set. Recommend setting a Mode.")
+		recommendations = append(recommendations, "No mode is set, meaning we'll default to Advanced flag set. Recommend setting a Mode.")
 	} else if !ListContains(ValidTypeScriptModes, n.Mode) {
-		results.Errors = append(results.Errors, "No valid Mode set. Must be simple, advanced, or strict.")
+		errors = append(errors, "No valid Mode set. Must be simple, advanced, or strict.")
 	}
 
 	if n.Target == "" {
-		results.Recommendations = append(results.Recommendations, "No Target set, meaning we default to ES5. Recommend setting Target to ES5, ES6, or ES7.")
+		recommendations = append(recommendations, "No Target set, meaning we default to ES5. Recommend setting Target to ES5, ES6, or ES7.")
 	} else if !ListContains(ValidTypeScriptTargets, n.Target) {
-		results.Errors = append(results.Errors, "No valid target set. Must be ES5, ES6, or ES7.")
+		errors = append(errors, "No valid target set. Must be ES5, ES6, or ES7.")
 	}
+
+	results["Deprecations"] = deprecations
+	results["Errors"] = errors
+	results["Recommendations"] = recommendations
 
 	return results
 }

@@ -1,11 +1,7 @@
 package main
 
-// NoodlesLintResult contains recommendations, hard requirements, deprecation notices, and more
-type NoodlesLintResult struct {
-	Deprecations    []string
-	Errors          []string
-	Recommendations []string
-}
+// NoodlesLintResult contains Deprecations, Errors, and Recommendations
+type NoodlesLintResult map[string][]string
 
 // NoodlesProject is the configuration for Noodles Projects.
 type NoodlesProject struct {
