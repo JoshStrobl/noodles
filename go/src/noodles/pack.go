@@ -3,8 +3,8 @@ package main
 import (
 	"archive/tar"
 	"fmt"
-	"github.com/solus-project/xzed"
 	"github.com/spf13/cobra"
+	"github.com/stroblindustries/coreutils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -97,21 +97,17 @@ func TarContents() {
 		tarWriter.Close() // Flush all contents to the file
 		file.Close()      // Close the file
 
-		if xzfile, xzCreateErr := os.Create(tarName + ".xz"); xzCreateErr == nil { // Create an xz file
-			tarContent, _ := ioutil.ReadFile(tarName)
+		tarContent, _ := ioutil.ReadFile(tarName)
 
-			if len(tarContent) != 0 { // If there is content
-				if xzWriter, xzWriterErr := xzed.NewWriterLevel(xzfile, xzed.BestCompression); xzWriterErr == nil {
-					xzWriter.Write(tarContent)
-					xzWriter.Close()
-					xzfile.Close()
-					os.Remove(tarName) // Remove the .tar file since it is no longer needed.
-				} else {
-					fmt.Println("Failed to create a compressed tarball.")
-				}
+		if len(tarContent) != 0 { // If there is content
+			if coreutils.ExecutableExists("xz") { // If xz exists in PATH
+				coreutils.ExecCommand("xz", []string{"-z", "-e", tarName}, true)
+				os.Remove(tarName)
 			} else {
-				fmt.Println("No content found in tarball.")
+				fmt.Println("xz does not exist on this system.")
 			}
+		} else {
+			fmt.Println("No content found in tarball.")
 		}
 	} else {
 		fmt.Println("Failed to create our .tar file.")
