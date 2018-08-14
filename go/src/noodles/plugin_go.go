@@ -63,6 +63,10 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 		runErr = os.MkdirAll(filepath.Dir(n.Destination), coreutils.NonGlobalFileMode)
 	}
 
+	if !n.Binary && n.Source == "" { // If this is not a binary and source is not set
+		n.Source = filepath.Join("src", n.SimpleName, "*.go") // Set our source to the package name
+	}
+
 	if runErr == nil { // If there wasn't any error creating the necessary directories
 		args := []string{"build"}
 
@@ -83,9 +87,13 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 			fmt.Println("Build successful.")
 			sourceDir := filepath.Dir(n.Source)
 			if goFiles, getErr := coreutils.GetFilesContains(sourceDir, ".go"); getErr == nil { // Get all files with .go extension
-				args := []string{"-s", "-w"}
-				args = append(args, goFiles...)
-				coreutils.ExecCommand("gofmt", args, false) // Run formatting
+				if len(goFiles) != 0 { // If we managed to find files
+					args := []string{"-s", "-w"}
+					args = append(args, goFiles...)
+					coreutils.ExecCommand("gofmt", args, false) // Run formatting
+				}
+			} else { // If we failed to get files
+				runErr = errors.New("Failed to get files from " + sourceDir + ": " + getErr.Error())
 			}
 		}
 	} else { // If we failed to create the necessary directories
