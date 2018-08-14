@@ -33,7 +33,7 @@ func (p *GoPlugin) PreRun(n *NoodlesProject) error {
 	if !coreutils.ExecutableExists("go") { // If the go executable does not exist
 		preRunErr = errors.New("Go is not installed on your system. Please run noodles setup")
 	} else { // If the go executable exists
-		ToggleGoEnv(true) // Enable the Go environment
+		preRunErr = ToggleGoEnv(true) // Enable the Go environment
 	}
 
 	return preRunErr
@@ -62,7 +62,7 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 		args := []string{"build", "-o", n.Destination}
 		args = append(args, files...)
 
-		goCompilerOutput := coreutils.ExecCommand("go", args, true)
+		goCompilerOutput := coreutils.ExecCommand("go", args, false)
 
 		if strings.Contains(goCompilerOutput, ".go") || strings.Contains(goCompilerOutput, "# command") { // If running the go build shows there are obvious issues
 			runErr = errors.New(strings.TrimSpace(goCompilerOutput))
