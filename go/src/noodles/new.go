@@ -149,6 +149,10 @@ func NewProjectPrompt(newProjectName string) {
 		break
 	}
 
+	if noodles.Projects == nil { // Projects doesn't exist yet (no projects yet)
+		noodles.Projects = make(map[string]NoodlesProject)
+	}
+
 	noodles.Projects[newProjectName] = project
 	SaveConfig()
 }
@@ -248,6 +252,10 @@ func NewScriptPrompt(newScriptName string) {
 		Exec:        executable,
 		File:        file,
 		Redirect:    redirect,
+	}
+
+	if noodles.Scripts == nil { // Scripts doesn't exist yet (no projects yet)
+		noodles.Scripts = make(map[string]NoodlesScript)
 	}
 
 	noodles.Scripts[newScriptName] = script
