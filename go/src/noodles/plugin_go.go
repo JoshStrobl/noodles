@@ -64,18 +64,20 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 	}
 
 	if runErr == nil { // If there wasn't any error creating the necessary directories
-		files := n.GetFiles("_test.go") // Exclude _test files
 		args := []string{"build"}
 
 		if n.Binary { // If this is a binary instead of a package, ensure we set the binary output to a destination
+			files := n.GetFiles("_test.go") // Exclude _test files
 			binArgs := []string{"-o", n.Destination}
 			args = append(args, binArgs...)
+			args = append(args, files...)
+		} else {
+			args = append(args, n.SimpleName)
 		}
 
-		args = append(args, files...)
-		goCompilerOutput := coreutils.ExecCommand("go", args, false)
+		goCompilerOutput := coreutils.ExecCommand("go", args, true)
 
-		if strings.Contains(goCompilerOutput, ".go") || strings.Contains(goCompilerOutput, "# command") { // If running the go build shows there are obvious issues
+		if strings.Contains(goCompilerOutput, ".go") || strings.Contains(goCompilerOutput, "# ") { // If running the go build shows there are obvious issues
 			runErr = errors.New(strings.TrimSpace(goCompilerOutput))
 		} else { // If there was no obvious issues
 			fmt.Println("Build successful.")

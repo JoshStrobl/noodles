@@ -125,28 +125,20 @@ func NewProjectPrompt(newProjectName string) {
 	_, plugin, pluginPromptErr := pluginPrompt.Run() // Run our plugin selection
 	PromptErrorCheck(pluginPromptErr)
 
-	source := TextPromptValidate("Source(s)", func(input string) error {
-		return PromptExtensionValidate(plugin, input)
-	})
-
-	destination := coreutils.InputMessage("Destination")
+	plugin = strings.ToLower(plugin)
 
 	project := NoodlesProject{
-		Destination: destination,
-		Plugin:      strings.ToLower(plugin),
-		Source:      source,
+		Plugin: strings.ToLower(plugin),
 	}
 
-	switch plugin {
-	case "Go":
-		GoProjectPrompt(&project)
-		break
-	case "LESS":
+	if plugin == "go" {
+		GoProjectPrompt(plugin, &project)
+	} else if plugin == "less" {
+		SourceDestinationPrompt(plugin, &project)
 		LESSProjectPrompt(&project)
-		break
-	case "TypeScript":
+	} else if plugin == "typescript" {
+		SourceDestinationPrompt(plugin, &project)
 		TypeScriptProjectPrompt(&project)
-		break
 	}
 
 	if noodles.Projects == nil { // Projects doesn't exist yet (no projects yet)
@@ -158,9 +150,16 @@ func NewProjectPrompt(newProjectName string) {
 }
 
 // GoProjectPrompt will provide the necessary project prompts for a Go project
-func GoProjectPrompt(project *NoodlesProject) {
+func GoProjectPrompt(plugin string, project *NoodlesProject) {
 	isBinaryVal := TextPromptValidate("Is A Binary [y/N]", TextYNValidate)
 	project.Binary = IsYes(isBinaryVal)
+
+	if project.Binary { // If this is not a binary
+		SourceDestinationPrompt(plugin, project) // Request the sources and destinations
+	} else {
+		pkgName := coreutils.InputMessage("Package name")
+		project.SimpleName = pkgName // Set our requested package name as the simple name
+	}
 }
 
 // LESSProjectPrompt will provide the necessary project prompts for a LESS project
@@ -168,6 +167,18 @@ func LESSProjectPrompt(project *NoodlesProject) {
 	appendHashVal := TextPromptValidate("Append SHA256SUM to end of file name [y/N]", TextYNValidate)
 
 	project.AppendHash = IsYes(appendHashVal)
+}
+
+// SourceDestinationPrompt prompts for the sources and destinations for compilation
+func SourceDestinationPrompt(plugin string, project *NoodlesProject) {
+	source := TextPromptValidate("Source(s)", func(input string) error {
+		return PromptExtensionValidate(plugin, input)
+	})
+
+	destination := coreutils.InputMessage("Destination")
+
+	project.Destination = destination
+	project.Source = source
 }
 
 // TypeScriptProjectPrompt will provide the necessary project prompts for a TypeScript project
