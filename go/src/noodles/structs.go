@@ -42,6 +42,7 @@ type NoodlesScript struct {
 	Exec        string
 	File        string `toml:"File,omitempty"`
 	Redirect    bool   `toml:"Redirect,omitempty"`
+	UseGoEnv    bool   `toml:"UseGoEnv,omitempty"`
 }
 
 type validateFunc func(string) error

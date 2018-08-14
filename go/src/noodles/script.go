@@ -61,10 +61,18 @@ func RunScript(name string) {
 			fmt.Printf("Running: %s\n", commandRunning)
 		}
 
+		if script.UseGoEnv { // If we should be enforcing Go env
+			ToggleGoEnv(true) // Toggle env on
+		}
+
 		output := coreutils.ExecCommand(script.Exec, script.Arguments, script.Redirect)
 
 		if (script.File != "") && script.Redirect { // If we should redirect output to a file
 			coreutils.WriteOrUpdateFile(script.File, []byte(output), coreutils.NonGlobalFileMode)
+		}
+
+		if script.UseGoEnv { // If we should be enforcing Go env
+			ToggleGoEnv(false) // Toggle env off
 		}
 
 		os.Chdir(workdir) // Change back to the work dir if needed
