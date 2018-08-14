@@ -24,6 +24,7 @@ func lint(cmd *cobra.Command, args []string) {
 
 	for name, project := range noodles.Projects { // For each project
 		var plugin NoodlesPlugin
+		fmt.Printf("Linting %s:\n", name)
 
 		if project.Plugin != "" {
 			switch project.Plugin {
@@ -36,13 +37,13 @@ func lint(cmd *cobra.Command, args []string) {
 			case "typescript": // TypeScript
 				plugin = &typescriptPlugin
 				break
+			default:
+				fmt.Printf("%s is not a valid plugin.\n", project.Plugin)
+				os.Exit(1)
 			}
 
 			results := plugin.Lint(&project) // Lint the project, return our lint results
-
 			resultsTypes := []string{"Deprecations", "Errors", "Recommendation"}
-
-			fmt.Printf("Linting %s:\n", name)
 
 			for _, resultType := range resultsTypes {
 				if resultList, exists := results[resultType]; exists { // This type exists

@@ -49,19 +49,30 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 	var runErr error
 	os.Chdir(filepath.Join(workdir, "go")) // Change to our go directory
 
-	if n.Destination == "" { // If no destination is set
-		n.Destination = filepath.Join("build", n.SimpleName) // Set destination to build/name (as binary)
+	if n.Destination == "" { // If a destination is set
+		if n.Binary { // If we're making a binary
+			n.Destination = filepath.Join(workdir, "build", n.SimpleName) // Set destination to build/name (as binary)
+		} else {
+			n.Destination = workdir
+		}
+	} else {
+		n.Destination = filepath.Join(workdir, n.Destination) // Combine workdir and destination
 	}
 
-	n.Destination = filepath.Join(workdir, n.Destination)
-
-	runErr = os.MkdirAll(filepath.Dir(n.Destination), coreutils.NonGlobalFileMode)
+	if n.Binary {
+		runErr = os.MkdirAll(filepath.Dir(n.Destination), coreutils.NonGlobalFileMode)
+	}
 
 	if runErr == nil { // If there wasn't any error creating the necessary directories
-		files := n.GetFiles()
-		args := []string{"build", "-o", n.Destination}
-		args = append(args, files...)
+		files := n.GetFiles("_test.go") // Exclude _test files
+		args := []string{"build"}
 
+		if n.Binary { // If this is a binary instead of a package, ensure we set the binary output to a destination
+			binArgs := []string{"-o", n.Destination}
+			args = append(args, binArgs...)
+		}
+
+		args = append(args, files...)
 		goCompilerOutput := coreutils.ExecCommand("go", args, false)
 
 		if strings.Contains(goCompilerOutput, ".go") || strings.Contains(goCompilerOutput, "# command") { // If running the go build shows there are obvious issues

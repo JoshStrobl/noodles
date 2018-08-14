@@ -133,7 +133,7 @@ func NewProjectPrompt(newProjectName string) {
 
 	project := NoodlesProject{
 		Destination: destination,
-		Plugin:      plugin,
+		Plugin:      strings.ToLower(plugin),
 		Source:      source,
 	}
 

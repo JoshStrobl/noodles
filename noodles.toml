@@ -18,6 +18,7 @@ Version = 0.1
 		Source = "src/typescript/example/example.ts"
 		Target = "ES5"
 	[Projects.noodles]
+		Binary = true
 		Destination = "build/noodles"
 		Plugin = "go"
 		SimpleName = "noodles"
