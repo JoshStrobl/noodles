@@ -20,37 +20,20 @@ var scriptCmd = &cobra.Command{
 }
 
 var verbose bool
+var selectedScript string
 
 func init() {
 	scriptCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose mode.")
+	scriptCmd.Flags().StringVarP(&selectedScript, "script", "s", "", "Name of the script we're running")
 }
 
 func script(cmd *cobra.Command, args []string) {
-	if len(args) != 0 { // If no argument are passed
-		for _, arg := range args { // For each argument
-			if _, exists := noodles.Scripts[arg]; exists { // If this
-				RunScript(arg)
-			} else {
-				fmt.Printf("%s is not a valid script. Exiting.\n", arg)
-				break
-			}
+	if selectedScript == "" { // If no script is set
+		for name := range noodles.Scripts {
+			RunScript(name)
 		}
-	} else {
-		if len(noodles.Scripts) != 0 { // If there are scripts set
-			fmt.Printf("No scripts passed to run. Here is a list:\n\n")
-			for name, script := range noodles.Scripts {
-				line := name
-
-				if script.Description != "" {
-					line += ": " + script.Description
-				}
-
-				fmt.Println("-", line)
-			}
-			fmt.Printf("\n") // Intentional padding ad end of output
-		} else {
-			fmt.Println("No scripts defined in your noodles.toml file.")
-		}
+	} else { // If a script is set
+		RunScript(selectedScript)
 	}
 }
 
