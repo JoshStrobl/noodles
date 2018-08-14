@@ -42,6 +42,8 @@ func RunScript(name string) {
 	script, _ := noodles.Scripts[name] // Get our script
 
 	if script.Exec != "" { // If there is an executable
+		fmt.Printf("Running script: %s\n", name)
+
 		if script.Directory != "" { // If we should run this command in a directory
 			failedToChange := os.Chdir(filepath.Join(workdir, script.Directory)) // Change to the directory
 
