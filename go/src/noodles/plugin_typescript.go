@@ -84,6 +84,13 @@ func (p *TypeScriptPlugin) Check(n *NoodlesProject) NoodlesCheckResult {
 	return results
 }
 
+// Lint is currently a stub func, offers no functionality yet.
+func (p *TypeScriptPlugin) Lint(n *NoodlesProject, confidence float64) error {
+	var lintErr error
+	fmt.Println("Linting of " + n.SimpleName + " is currently not supported.")
+	return lintErr
+}
+
 // PreRun will check if the necessary executables for TypeScript and compression are installed
 func (p *TypeScriptPlugin) PreRun(n *NoodlesProject) error {
 	var preRunErr error

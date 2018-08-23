@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"github.com/stroblindustries/coreutils"
 	"io/ioutil"
 	"os"
@@ -32,6 +33,23 @@ func init() {
 func (p *LessPlugin) Check(n *NoodlesProject) NoodlesCheckResult {
 	results := make(NoodlesCheckResult)
 	return results
+}
+
+// Lint will lint our LESS
+func (p *LessPlugin) Lint(n *NoodlesProject, confidence float64) error {
+	var lintErr error
+
+	if n.Source == "" { // If no Source is set
+		n.Source = filepath.Join("src/less/", n.SimpleName+".less")
+	}
+
+	lessFlags := LessCompilerFlags
+	lessFlags = append(lessFlags, "--lint", n.Source) // Add our source and lint flag
+
+	commandOutput := coreutils.ExecCommand("lessc", lessFlags, false) // Call execCommand and get its commandOutput
+	fmt.Println(commandOutput)
+
+	return lintErr
 }
 
 // PreRun will check if the necessary lessc executable is installed

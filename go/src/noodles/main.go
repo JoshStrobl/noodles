@@ -44,6 +44,7 @@ func init() {
 
 	rootCmd.AddCommand(buildCmd)
 	rootCmd.AddCommand(checkCmd)
+	rootCmd.AddCommand(lintCmd)
 	rootCmd.AddCommand(newCmd)
 	rootCmd.AddCommand(packCmd)
 	rootCmd.AddCommand(setupCmd)

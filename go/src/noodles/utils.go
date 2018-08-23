@@ -29,7 +29,7 @@ func CopyFile(source, destination string) error {
 	destinationFolder := filepath.Dir(destination) // Get the folders leading up to the file
 
 	if createDestFolderErr := os.MkdirAll(destinationFolder, 0755); createDestFolderErr != nil {
-		copyFileErr = errors.New("Failed to create " + destinationFolder + ": " + createDestFolderErr.Error())
+		copyFileErr = errors.New("failed to create " + destinationFolder + ": " + createDestFolderErr.Error())
 	}
 
 	if copyFileErr == nil {
@@ -39,10 +39,10 @@ func CopyFile(source, destination string) error {
 				sourceFile.Close()                   // Close project file
 				destinationFile.Close()              // Close the temporary destination file
 			} else {
-				copyFileErr = errors.New("Failed to open " + source + ": " + openErr.Error())
+				copyFileErr = errors.New("failed to open " + source + ": " + openErr.Error())
 			}
 		} else {
-			copyFileErr = errors.New("Failed to create " + destination + ": " + createErr.Error())
+			copyFileErr = errors.New("failed to create " + destination + ": " + createErr.Error())
 		}
 	}
 
@@ -77,7 +77,7 @@ func ListContains(list []string, substring string) bool {
 // PromptErrorCheck will check if we have a valid error from a prompt and if so, display and exit.
 func PromptErrorCheck(promptErr error) {
 	if promptErr != nil { // If we failed to get the prompt result
-		fmt.Printf("Failed to get the answer to our prompt: %s\n", promptErr.Error())
+		fmt.Printf("failed to get the answer to our prompt: %s\n", promptErr.Error())
 		os.Exit(1)
 	}
 }
@@ -91,7 +91,7 @@ func PromptExtensionValidate(expectedType, input string) error {
 
 	if len(input) > 0 && extension != "" { // If we've provided input
 		if extension[1:] != projectExtension { // If the extension provided by input (minus the prepended .) is not what we're expecting
-			promptExtensionError = errors.New("Source must be a specific " + expectedType + " file, or a glob (*." + projectExtension + ").")
+			promptExtensionError = errors.New("source must be a specific " + expectedType + " file, or a glob (*." + projectExtension + ").")
 		}
 	}
 
@@ -124,7 +124,7 @@ func TextYNValidate(input string) error {
 	input = strings.ToLower(input)
 
 	if (input != "yes") && (input != "y") && (input != "no") && (input != "n") {
-		err = errors.New("Must be a yes or no response")
+		err = errors.New("must be a yes or no response")
 	}
 
 	return err

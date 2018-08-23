@@ -24,6 +24,9 @@ type NoodlesPlugin interface {
 	// Check is a function that will check the values of various aspects of a NoodlesProject and make recommendations
 	Check(n *NoodlesProject) NoodlesCheckResult
 
+	// Lint is a function that will run any respective linting suits for a NoodlesPlugin against a NoodlesProject
+	Lint(n *NoodlesProject, confidence float64) error
+
 	// PreRun is a function that should be performed prior to primary compilation
 	PreRun(n *NoodlesProject) error
 

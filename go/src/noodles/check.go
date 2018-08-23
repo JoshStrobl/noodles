@@ -7,10 +7,11 @@ import (
 )
 
 var checkCmd = &cobra.Command{
-	Use:   "check",
-	Short: "Validates the existing noodles.toml",
-	Long:  "Validates the existing noodles.toml",
-	Run:   check,
+	Use:     "check",
+	Aliases: []string{"validate"},
+	Short:   "Validates the existing noodles.toml",
+	Long:    "Validates the existing noodles.toml",
+	Run:     check,
 }
 
 // check will validate noodles.toml

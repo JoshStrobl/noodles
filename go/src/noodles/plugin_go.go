@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/stroblindustries/coreutils"
+	xlint "golang.org/x/lint"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,12 +28,57 @@ func (p *GoPlugin) Check(n *NoodlesProject) NoodlesCheckResult {
 	return results
 }
 
+// Lint will lint our Go code. Lint takes a Noodles Project and the minimum acceptable confidence
+func (p *GoPlugin) Lint(n *NoodlesProject, confidence float64) error {
+	var lintErr error
+	sourceDir := filepath.Dir(n.Source)
+
+	goFiles, getErr := coreutils.GetFilesContains(sourceDir, ".go") // Get all files with .go extension
+
+	if getErr == nil { // Get all files with .go extension
+		if len(goFiles) != 0 { // If we managed to find files
+
+			for _, fileName := range goFiles { // For each file
+				fileContent, readErr := ioutil.ReadFile(fileName)
+
+				if readErr == nil { // If there was no error reading this file
+					var linter xlint.Linter
+					problems, xlintErr := linter.Lint(fileName, fileContent)
+
+					if xlintErr == nil { // If there was no error during linting
+						if len(problems) > 0 {
+							for _, problem := range problems { // For each problem
+								if problem.Confidence >= confidence { // If the linting confidence is equal to or greater than our requested minimum confidence
+									// Example: test.go:24:34: test = errors.New("Hello world.")
+									// error strings should not be capitalized or end with punctuation or a newline
+									lineErr := strings.TrimSpace(problem.LineText) // Trim any spacing
+									fmt.Printf("%s:%d:%d: %s\n%s\n", fileName, problem.Position.Line, problem.Position.Column, lineErr, problem.Text)
+								}
+							}
+						}
+					} else {
+						lintErr = errors.New("failed to lint " + fileName + ": " + xlintErr.Error())
+						break
+					}
+				} else { // If we failed to read the file
+					lintErr = errors.New("failed to read " + fileName + ": " + readErr.Error())
+					break
+				}
+			}
+		}
+	} else {
+		lintErr = errors.New("failed to get files: " + getErr.Error())
+	}
+
+	return lintErr
+}
+
 // PreRun will check if the necessary Go executable is installed
 func (p *GoPlugin) PreRun(n *NoodlesProject) error {
 	var preRunErr error
 
 	if !coreutils.ExecutableExists("go") { // If the go executable does not exist
-		preRunErr = errors.New("Go is not installed on your system. Please run noodles setup")
+		preRunErr = errors.New("go is not installed on your system. Please run noodles setup")
 	} else { // If the go executable exists
 		preRunErr = ToggleGoEnv(true) // Enable the Go environment
 	}
@@ -47,7 +94,6 @@ func (p *GoPlugin) PostRun(n *NoodlesProject) error {
 // Run will compile the provided project
 func (p *GoPlugin) Run(n *NoodlesProject) error {
 	var runErr error
-	os.Chdir(filepath.Join(workdir, "go")) // Change to our go directory
 
 	if n.Destination == "" { // If a destination is set
 		if n.Binary { // If we're making a binary
@@ -93,11 +139,11 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 					coreutils.ExecCommand("gofmt", args, false) // Run formatting
 				}
 			} else { // If we failed to get files
-				runErr = errors.New("Failed to get files from " + sourceDir + ": " + getErr.Error())
+				runErr = errors.New("failed to get files from " + sourceDir + ": " + getErr.Error())
 			}
 		}
 	} else { // If we failed to create the necessary directories
-		fmt.Printf("Failed to create the necessary directories:\n%s\n", runErr.Error())
+		fmt.Printf("failed to create the necessary directories:\n%s\n", runErr.Error())
 		ToggleGoEnv(false)
 	}
 
@@ -108,8 +154,10 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 func ToggleGoEnv(on bool) error {
 	var toggleEnvErr error
 	if on {
+		goDir := filepath.Join(workdir, "go")
 		originalGoPath = os.Getenv("GOPATH") // Store the original GOPATH
-		toggleEnvErr = os.Setenv("GOPATH", filepath.Join(workdir, "go"))
+		toggleEnvErr = os.Setenv("GOPATH", goDir)
+		os.Chdir(goDir)
 	} else {
 		if toggleEnvErr = os.Setenv("GOPATH", originalGoPath); toggleEnvErr == nil { // If there was no error setting the environment
 			toggleEnvErr = os.Chdir(workdir)

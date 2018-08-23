@@ -78,7 +78,7 @@ func NewWorkspacePrompt() {
 				var err error
 
 				if len(input) == 0 { // If there is no input string
-					err = errors.New("A non-empty value is required for this field")
+					err = errors.New("a non-empty value is required for this field")
 				}
 
 				return err
@@ -89,7 +89,7 @@ func NewWorkspacePrompt() {
 				_, convErr := strconv.ParseFloat(input, 64) // Attempt to just do a conversion
 
 				if convErr != nil {
-					err = errors.New("Invalid Version Number")
+					err = errors.New("invalid version number")
 				}
 
 				return err
@@ -217,7 +217,7 @@ func NewScriptPrompt(newScriptName string) {
 		var execExistsErr error
 
 		if !coreutils.ExecutableExists(input) {
-			execExistsErr = errors.New("Executable does not exist")
+			execExistsErr = errors.New("executable does not exist")
 		}
 
 		return execExistsErr
@@ -241,7 +241,7 @@ func NewScriptPrompt(newScriptName string) {
 		}
 
 		if !coreutils.IsDir(input) {
-			dirExistsErr = errors.New("Directory does not exist")
+			dirExistsErr = errors.New("directory does not exist")
 		}
 
 		return dirExistsErr
