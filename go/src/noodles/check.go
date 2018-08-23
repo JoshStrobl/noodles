@@ -6,15 +6,15 @@ import (
 	"os"
 )
 
-var lintCmd = &cobra.Command{
-	Use:   "lint",
+var checkCmd = &cobra.Command{
+	Use:   "check",
 	Short: "Validates the existing noodles.toml",
 	Long:  "Validates the existing noodles.toml",
-	Run:   lint,
+	Run:   check,
 }
 
-// lint will validate noodles.toml
-func lint(cmd *cobra.Command, args []string) {
+// check will validate noodles.toml
+func check(cmd *cobra.Command, args []string) {
 	readErr := ReadConfig() // Read the config
 
 	if readErr != nil { // If there was a read error on the config
@@ -24,7 +24,7 @@ func lint(cmd *cobra.Command, args []string) {
 
 	for name, project := range noodles.Projects { // For each project
 		var plugin NoodlesPlugin
-		fmt.Printf("Linting %s:\n", name)
+		fmt.Printf("Checking %s:\n", name)
 
 		if project.Plugin != "" {
 			switch project.Plugin {
@@ -42,7 +42,7 @@ func lint(cmd *cobra.Command, args []string) {
 				os.Exit(1)
 			}
 
-			results := plugin.Lint(&project) // Lint the project, return our lint results
+			results := plugin.Check(&project) // Check the project, return our check results
 			resultsTypes := []string{"Deprecations", "Errors", "Recommendation"}
 
 			for _, resultType := range resultsTypes {

@@ -28,9 +28,9 @@ func init() {
 	}
 }
 
-// Lint will check the specified project's settings related to our plugin
-func (p *LessPlugin) Lint(n *NoodlesProject) NoodlesLintResult {
-	results := make(NoodlesLintResult)
+// Check will check the specified project's settings related to our plugin
+func (p *LessPlugin) Check(n *NoodlesProject) NoodlesCheckResult {
+	results := make(NoodlesCheckResult)
 	return results
 }
 

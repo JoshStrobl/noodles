@@ -53,9 +53,9 @@ func init() {
 	ValidTypeScriptTargets = []string{"ES5", "ES6", "ES7"}
 }
 
-// Lint will check the specified project's settings related to our plugin
-func (p *TypeScriptPlugin) Lint(n *NoodlesProject) NoodlesLintResult {
-	results := make(NoodlesLintResult)
+// Check will check the specified project's settings related to our plugin
+func (p *TypeScriptPlugin) Check(n *NoodlesProject) NoodlesCheckResult {
+	results := make(NoodlesCheckResult)
 
 	deprecations := []string{}
 	errors := []string{}

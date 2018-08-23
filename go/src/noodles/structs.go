@@ -1,7 +1,7 @@
 package main
 
-// NoodlesLintResult contains Deprecations, Errors, and Recommendations
-type NoodlesLintResult map[string][]string
+// NoodlesCheckResult contains Deprecations, Errors, and Recommendations
+type NoodlesCheckResult map[string][]string
 
 // NoodlesProject is the configuration for Noodles Projects.
 type NoodlesProject struct {
@@ -21,8 +21,8 @@ type NoodlesProject struct {
 
 // NoodlesPlugin is an interface for plugins to implement
 type NoodlesPlugin interface {
-	// Lint is a function that will check the values of various aspects of a NoodlesProject and make recommendations
-	Lint(n *NoodlesProject) NoodlesLintResult
+	// Check is a function that will check the values of various aspects of a NoodlesProject and make recommendations
+	Check(n *NoodlesProject) NoodlesCheckResult
 
 	// PreRun is a function that should be performed prior to primary compilation
 	PreRun(n *NoodlesProject) error

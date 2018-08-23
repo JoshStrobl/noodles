@@ -15,9 +15,9 @@ type GoPlugin struct {
 
 var originalGoPath string
 
-// Lint will check the specified project's settings related to our plugin
-func (p *GoPlugin) Lint(n *NoodlesProject) NoodlesLintResult {
-	results := make(NoodlesLintResult)
+// Check will check the specified project's settings related to our plugin
+func (p *GoPlugin) Check(n *NoodlesProject) NoodlesCheckResult {
+	results := make(NoodlesCheckResult)
 
 	if !strings.HasSuffix(n.Source, "*.go") { // Globbing isn't enabled
 		results["Recommendations"] = []string{"Not using globbing for getting all Go files in this project. Recommend changing Sources to *.go."}

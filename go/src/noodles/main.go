@@ -43,7 +43,7 @@ func init() {
 	}
 
 	rootCmd.AddCommand(buildCmd)
-	rootCmd.AddCommand(lintCmd)
+	rootCmd.AddCommand(checkCmd)
 	rootCmd.AddCommand(newCmd)
 	rootCmd.AddCommand(packCmd)
 	rootCmd.AddCommand(setupCmd)
