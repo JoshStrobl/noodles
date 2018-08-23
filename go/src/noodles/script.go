@@ -12,11 +12,12 @@ import (
 )
 
 var scriptCmd = &cobra.Command{
-	Use:     "script",
-	Aliases: []string{"run-script"},
-	Short:   "Run a custom script",
-	Long:    "Run a custom script",
-	Run:     script,
+	Use:               "script",
+	Aliases:           []string{"run-script"},
+	Short:             "Run a custom script",
+	Long:              "Run a custom script",
+	Run:               script,
+	DisableAutoGenTag: true,
 }
 
 var verbose bool

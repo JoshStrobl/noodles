@@ -15,10 +15,11 @@ import (
 var tmpDir string
 
 var packCmd = &cobra.Command{
-	Use:   "pack",
-	Short: "Package configured assets for all or a specified project",
-	Long:  "Package configured assets for all or a specified project into a distributable tarball",
-	Run:   pack,
+	Use:               "pack",
+	Short:             "Package configured assets for all or a specified project",
+	Long:              "Package configured assets for all or a specified project into a distributable tarball",
+	Run:               pack,
+	DisableAutoGenTag: true,
 }
 
 var packProject string

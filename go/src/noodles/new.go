@@ -12,10 +12,11 @@ import (
 )
 
 var newCmd = &cobra.Command{
-	Use:   "new",
-	Short: "Creates a Noodles workspace, projects, or scripts",
-	Long:  "Creates a Noodles workspace, projects, or scripts",
-	Run:   new,
+	Use:               "new",
+	Short:             "Creates a Noodles workspace, projects, or scripts",
+	Long:              "Creates a Noodles workspace, projects, or scripts",
+	Run:               new,
+	DisableAutoGenTag: true,
 }
 
 var newProjectName string

@@ -8,10 +8,11 @@ import (
 )
 
 var buildCmd = &cobra.Command{
-	Use:   "build",
-	Short: "Build all or a specific project",
-	Long:  "Build all or a specific project",
-	Run:   build,
+	Use:               "build",
+	Short:             "Build all or a specific project",
+	Long:              "Build all or a specific project",
+	Run:               build,
+	DisableAutoGenTag: true,
 }
 
 var buildProject string

@@ -16,10 +16,11 @@ type DependencyMap struct {
 }
 
 var setupCmd = &cobra.Command{
-	Use:   "setup",
-	Short: "Set up all or a specific project",
-	Long:  "Set up all or a specific project. This will attempt to install the necessary dependencies required for various projects.",
-	Run:   Setup,
+	Use:               "setup",
+	Short:             "Set up all or a specific project",
+	Long:              "Set up all or a specific project. This will attempt to install the necessary dependencies required for various projects.",
+	Run:               Setup,
+	DisableAutoGenTag: true,
 }
 
 // ExecutableMissing is the message when a specific executable is missing.

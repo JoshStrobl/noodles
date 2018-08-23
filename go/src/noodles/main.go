@@ -25,6 +25,7 @@ var rootCmd = &cobra.Command{
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		ReadConfig() // Read the config (if it exists)
 	},
+	DisableAutoGenTag: true,
 }
 
 // Main

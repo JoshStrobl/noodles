@@ -6,10 +6,11 @@ import (
 )
 
 var lintCmd = &cobra.Command{
-	Use:   "lint",
-	Short: "Runs available linters for projects",
-	Long:  "Runs available linters for projects",
-	Run:   lint,
+	Use:               "lint",
+	Short:             "Runs available linters for projects",
+	Long:              "Runs available linters for projects",
+	Run:               lint,
+	DisableAutoGenTag: true,
 }
 
 var minimumConfidence float64
