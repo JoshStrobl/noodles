@@ -43,6 +43,11 @@ Version = 0.1
 		Description = "Script to test basic directory changing."
 		Directory = "build"
 		Exec = "pwd"
+	[Scripts.goenvdir]
+		Description = "Script to test use of Go env in conjunction with directory"
+		Directory = "noodles"
+		Exec = "pwd"
+		UseGoEnv = true
 	[Scripts.testfile]
 		File = "build/testoutput"
 		Exec = "ls"

@@ -45,8 +45,15 @@ func RunScript(name string) {
 	if script.Exec != "" { // If there is an executable
 		fmt.Printf("Running script: %s\n", name)
 
+		if script.UseGoEnv { // If we should be enforcing Go env
+			ToggleGoEnv(true)                                                        // Toggle env on
+			script.Directory = filepath.Join(workdir, "go", "src", script.Directory) // Ensure we prepend workdir and go
+		} else {
+			script.Directory = filepath.Join(workdir, script.Directory) // Ensure we prepend the workdir
+		}
+
 		if script.Directory != "" { // If we should run this command in a directory
-			failedToChange := os.Chdir(filepath.Join(workdir, script.Directory)) // Change to the directory
+			failedToChange := os.Chdir(script.Directory) // Change to the directory
 
 			if failedToChange != nil { // If we failed to change to the directory
 				fmt.Printf("Failed to change to the following directory: %s\n", script.Directory)
@@ -62,10 +69,6 @@ func RunScript(name string) {
 		if verbose {
 			commandRunning := script.Exec + " " + (strings.Join(script.Arguments, " "))
 			fmt.Printf("Running: %s\n", commandRunning)
-		}
-
-		if script.UseGoEnv { // If we should be enforcing Go env
-			ToggleGoEnv(true) // Toggle env on
 		}
 
 		output := coreutils.ExecCommand(script.Exec, script.Arguments, script.Redirect)
