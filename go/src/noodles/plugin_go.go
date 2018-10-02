@@ -131,6 +131,7 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 			runErr = errors.New(strings.TrimSpace(goCompilerOutput))
 		} else { // If there was no obvious issues
 			fmt.Println("Build successful.")
+			coreutils.ExecCommand("strip", []string{n.Destination}, true)
 			sourceDir := filepath.Dir(n.Source)
 			if goFiles, getErr := coreutils.GetFilesContains(sourceDir, ".go"); getErr == nil { // Get all files with .go extension
 				if len(goFiles) != 0 { // If we managed to find files
