@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stroblindustries/coreutils"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -152,12 +153,25 @@ func NewProjectPrompt(newProjectName string) {
 
 // GoProjectPrompt will provide the necessary project prompts for a Go project
 func GoProjectPrompt(plugin string, project *NoodlesProject) {
-	isBinaryVal := TextPromptValidate("Is A Binary [y/N]", TextYNValidate)
-	project.Binary = IsYes(isBinaryVal)
+	typePrompt := promptui.Select{
+		Label: "Type",
+		Items: []string{"Binary", "Package", "Plugin"},
+	}
 
-	if project.Binary { // If this is not a binary
+	_, goType, typePromptErr := typePrompt.Run() // Run our plugin selection
+	PromptErrorCheck(typePromptErr)
+
+	goType = strings.ToLower(goType)
+
+	if project.Type != "package" { // Binary or Plugin
 		SourceDestinationPrompt(plugin, project) // Request the sources and destinations
-	} else {
+
+		if project.Type == "plugin" { // Plugin
+			if filepath.Ext(project.Destination) != ".so" {
+				project.Destination = project.Destination + ".so" // Append .so
+			}
+		}
+	} else { // Package
 		pkgName := coreutils.InputMessage("Package name")
 		project.SimpleName = pkgName // Set our requested package name as the simple name
 	}

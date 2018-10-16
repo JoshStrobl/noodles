@@ -20,9 +20,18 @@ var originalGoPath string
 // Check will check the specified project's settings related to our plugin
 func (p *GoPlugin) Check(n *NoodlesProject) NoodlesCheckResult {
 	results := make(NoodlesCheckResult)
+	recommendations := []string{}
+
+	if n.Type == "" { // No type designated
+		recommendations = append(recommendations, "Not setting any type. Will default to binary. Recommend statically setting this.")
+	}
 
 	if !strings.HasSuffix(n.Source, "*.go") { // Globbing isn't enabled
-		results["Recommendations"] = []string{"Not using globbing for getting all Go files in this project. Recommend changing Sources to *.go."}
+		recommendations = append(recommendations, "Not using globbing for getting all Go files in this project. Recommend changing Sources to *.go.")
+	}
+
+	if len(recommendations) != 0 {
+		results["Recommendations"] = recommendations
 	}
 
 	return results
@@ -96,32 +105,42 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 	var runErr error
 
 	if n.Destination == "" { // If a destination is set
-		if n.Binary { // If we're making a binary
+		if n.Type == "binary" { // If this is a binary
 			n.Destination = filepath.Join(workdir, "build", n.SimpleName) // Set destination to build/name (as binary)
-		} else {
+		} else if n.Type == "package" { // Package
 			n.Destination = workdir
+		} else if n.Type == "plugin" { // Plugin
+			n.Destination = filepath.Join(workdir, "build", n.SimpleName, ".so") // Set destination to build/name.so
 		}
 	} else {
+		if (n.Type == "plugin") && (filepath.Ext(n.Destination) != ".so") { // Destination does not have .so
+			n.Destination = n.Destination + ".so"
+		}
+
 		n.Destination = filepath.Join(workdir, n.Destination) // Combine workdir and destination
 	}
 
-	if n.Binary {
+	if n.Type != "package" { // Binary or plugin
 		runErr = os.MkdirAll(filepath.Dir(n.Destination), coreutils.NonGlobalFileMode)
 	}
 
-	if !n.Binary && n.Source == "" { // If this is not a binary and source is not set
+	if (n.Type == "package") && n.Source == "" { // If this is a package and source is not set
 		n.Source = filepath.Join("src", n.SimpleName, "*.go") // Set our source to the package name
 	}
 
 	if runErr == nil { // If there wasn't any error creating the necessary directories
 		args := []string{"build"}
 
-		if n.Binary { // If this is a binary instead of a package, ensure we set the binary output to a destination
+		if n.Type != "package" { // Binary or plugin
 			files := n.GetFiles("_test.go") // Exclude _test files
-			binArgs := []string{"-o", n.Destination}
-			args = append(args, binArgs...)
+
+			if n.Type == "plugin" { // Plugin
+				args = append(args, []string{"-buildmode", "plugin"}...)
+			}
+
+			args = append(args, []string{"-o", n.Destination}...)
 			args = append(args, files...)
-		} else {
+		} else { // Package
 			args = append(args, n.SimpleName)
 		}
 
@@ -131,7 +150,11 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 			runErr = errors.New(strings.TrimSpace(goCompilerOutput))
 		} else { // If there was no obvious issues
 			fmt.Println("Build successful.")
-			coreutils.ExecCommand("strip", []string{n.Destination}, true)
+
+			if n.Type == "binary" {
+				coreutils.ExecCommand("strip", []string{n.Destination}, true) // Strip the binary
+			}
+
 			sourceDir := filepath.Dir(n.Source)
 			if goFiles, getErr := coreutils.GetFilesContains(sourceDir, ".go"); getErr == nil { // Get all files with .go extension
 				if len(goFiles) != 0 { // If we managed to find files

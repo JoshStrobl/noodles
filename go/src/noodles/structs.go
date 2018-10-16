@@ -6,7 +6,6 @@ type NoodlesCheckResult map[string][]string
 // NoodlesProject is the configuration for Noodles Projects.
 type NoodlesProject struct {
 	AppendHash      bool `toml:"AppendHash,omitempty"`
-	Binary          bool `toml:"Binary,omitempty"`
 	Compress        bool `toml:"Compress,omitempty"`
 	Destination     string
 	Flags           []string
@@ -17,6 +16,7 @@ type NoodlesProject struct {
 	Source          string
 	TarballLocation string `toml:"TarballLocation,omitempty"`
 	Target          string `toml:"Target,omitempty"`
+	Type            string `toml:"Type,omitempty"`
 }
 
 // NoodlesPlugin is an interface for plugins to implement

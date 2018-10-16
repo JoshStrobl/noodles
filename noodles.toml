@@ -18,17 +18,18 @@ Version = 0.1
 		Source = "src/typescript/example/example.ts"
 		Target = "ES5"
 	[Projects.noodles]
-		Binary = true
 		Destination = "build/noodles"
 		Plugin = "go"
 		SimpleName = "noodles"
 		Source = "src/noodles/*.go"
+		Type = "binary"
 	[Projects.noodlestest]
 		Destination = "build/test-recursion/noodles"
 		Plugin = "go"
 		SimpleName = "noodlestest"
 		Source = "src/noodles/*.go"
 		TarballLocation = "test-recursion/"
+		Type = "binary"
 
 [Scripts]
 	[Scripts.argtest]
