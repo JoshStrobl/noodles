@@ -13,7 +13,7 @@ import (
 
 // GoPlugin is our Go plugin
 type GoPlugin struct {
-	CleanupFiles []string
+	CleanupFilesList []string
 }
 
 var originalGoPath string
@@ -36,6 +36,50 @@ func (p *GoPlugin) Check(n *NoodlesProject) NoodlesCheckResult {
 	}
 
 	return results
+}
+
+// CleanupFiles will clean up any tracked files
+func (p *GoPlugin) CleanupFiles(n *NoodlesProject) error {
+	var cleanupErr error
+
+	if len(p.CleanupFilesList) > 0 { // If we have files to cleanup
+		for _, fileName := range p.CleanupFilesList { // For each file we need to cleanup
+			if removeErr := os.Remove(filepath.Join(n.SourceDir, fileName)); removeErr != nil { // If we failed to remove this file
+				cleanupErr = removeErr
+				break
+			}
+		}
+	}
+
+	return cleanupErr
+}
+
+// ConsolidateFiles will consolidate any files in child directories, if ConsolidateChildDirs is enabled
+func (p *GoPlugin) ConsolidateFiles(n *NoodlesProject) error {
+	var consolidateErr error
+
+	if n.ConsolidateChildDirs { // If we should consolidate child directories into the root directory of the project
+		p.CleanupFilesList = []string{}
+
+		if sourceDirFile, sourceOpenErr := os.Open(n.SourceDir); sourceOpenErr == nil { // If we successfully opened the directory to read the contents
+			if files, fileReadDirErr := sourceDirFile.Readdir(-1); fileReadDirErr == nil { // If we successfully read the directory contents of the source dir
+				for _, file := range files { // For each file
+					if file.IsDir() { // Is this a child dir inside our source dir
+						if copyErr := p.RecursiveCopy(filepath.Join(n.SourceDir, file.Name()), n); copyErr != nil { // If we failed to recursively copy the files
+							consolidateErr = copyErr
+							break
+						}
+					}
+				}
+			} else { // If we failed to read the contents of the source dir
+				consolidateErr = sourceOpenErr
+			}
+		} else {
+			consolidateErr = sourceOpenErr
+		}
+	}
+
+	return consolidateErr
 }
 
 // Lint will lint our Go code. Lint takes a Noodles Project and the minimum acceptable confidence
@@ -92,26 +136,7 @@ func (p *GoPlugin) PreRun(n *NoodlesProject) error {
 		preRunErr = ToggleGoEnv(true) // Enable the Go environment
 	}
 
-	if n.ConsolidateChildDirs { // If we should consolidate child directories into the root directory of the project
-		p.CleanupFiles = []string{}
-
-		if sourceDirFile, sourceOpenErr := os.Open(n.SourceDir); sourceOpenErr == nil { // If we successfully opened the directory to read the contents
-			if files, fileReadDirErr := sourceDirFile.Readdir(-1); fileReadDirErr == nil { // If we successfully read the directory contents of the source dir
-				for _, file := range files { // For each file
-					if file.IsDir() { // Is this a child dir inside our source dir
-						if copyErr := p.RecursiveCopy(filepath.Join(n.SourceDir, file.Name()), n); copyErr != nil { // If we failed to recursively copy the files
-							preRunErr = copyErr
-							break
-						}
-					}
-				}
-			} else { // If we failed to read the contents of the source dir
-				preRunErr = sourceOpenErr
-			}
-		} else {
-			preRunErr = sourceOpenErr
-		}
-	}
+	preRunErr = p.ConsolidateFiles(n)
 
 	return preRunErr
 }
@@ -120,16 +145,9 @@ func (p *GoPlugin) PreRun(n *NoodlesProject) error {
 func (p *GoPlugin) PostRun(n *NoodlesProject) error {
 	var postRunErr error
 
-	if len(p.CleanupFiles) > 0 { // If we have files to cleanup
-		for _, fileName := range p.CleanupFiles { // For each file we need to cleanup
-			if removeErr := os.Remove(filepath.Join(n.SourceDir, fileName)); removeErr != nil { // If we failed to remove this file
-				postRunErr = removeErr
-				break
-			}
-		}
-	}
-
+	postRunErr = p.CleanupFiles(n) // Cleanup any files related to this project
 	postRunErr = ToggleGoEnv(false)
+
 	return postRunErr
 }
 
@@ -153,7 +171,7 @@ func (p *GoPlugin) RecursiveCopy(dir string, n *NoodlesProject) error {
 					conflictFreePath := filepath.Join(n.SourceDir, conflictFreeFileName)
 
 					if copyErr := coreutils.CopyFile(originalFile, conflictFreePath); copyErr == nil { // If we successfully copied the file to our SourceDir
-						p.CleanupFiles = append(p.CleanupFiles, conflictFreeFileName) // Add to cleanup files
+						p.CleanupFilesList = append(p.CleanupFilesList, conflictFreeFileName) // Add to cleanup files
 					} else { // If we failed copying this file
 						recursiveCopyErr = copyErr
 						break
@@ -219,8 +237,8 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 		if strings.Contains(goCompilerOutput, ".go") || strings.Contains(goCompilerOutput, "# ") { // If running the go build shows there are obvious issues
 			goCompilerOutput = strings.TrimSpace(goCompilerOutput) // Trim space
 
-			if len(p.CleanupFiles) > 0 { // If we have cleanup files that could potentially have issues
-				for _, fileName := range p.CleanupFiles { // For each cleanup file
+			if len(p.CleanupFilesList) > 0 { // If we have cleanup files that could potentially have issues
+				for _, fileName := range p.CleanupFilesList { // For each cleanup file
 					potentialFileListing := filepath.Join(n.SourceDir, fileName)                                       // Get the potential file listing
 					correctFileListing := filepath.Join(n.SourceDir, strings.Replace(fileName, "__", "/", -1))         // Replace all references of __ with /
 					goCompilerOutput = strings.Replace(goCompilerOutput, potentialFileListing, correctFileListing, -1) // Replace all old references
