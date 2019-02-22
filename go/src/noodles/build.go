@@ -5,6 +5,8 @@ package main
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"os"
+	"path/filepath"
 )
 
 var buildCmd = &cobra.Command{
@@ -34,18 +36,19 @@ func build(cmd *cobra.Command, args []string) {
 // BuildProject is responsible for determining the appropriate plugin to execute and handle requires.
 func BuildProject(name string) {
 	if project, exists := noodles.Projects[name]; exists { // If this project exists
+		RunRequiresOperation("RequiresPreRun", &project)
+
 		var plugin NoodlesPlugin
 
-		switch project.Plugin {
-		case "go": // Go
+		if project.Plugin == "go" {
 			plugin = &goPlugin
-			break
-		case "less": // LESS
+		} else if project.Plugin == "less" {
 			plugin = &lessPlugin
-			break
-		case "typescript": // TypeScript
+		} else if project.Plugin == "typescript" {
 			plugin = &typescriptPlugin
-			break
+		} else {
+			fmt.Printf("Failed to get the plugin for type: %s\n", project.Plugin)
+			return
 		}
 
 		fmt.Printf("Performing pre-run checks for %s\n", name)
@@ -67,6 +70,8 @@ func BuildProject(name string) {
 			}
 		}
 
+		RunRequiresOperation("RequiresPostRun", &project)
+
 		fmt.Printf("Performing post-run for %s\n", name)
 		postRunErr := plugin.PostRun(&project)
 
@@ -75,5 +80,46 @@ func BuildProject(name string) {
 		}
 	} else {
 		fmt.Println(name + " is not a valid project")
+	}
+}
+
+// RunRequiresOperation will run an operation (pre-run or post-run require funcs) against the specified project's Requires
+func RunRequiresOperation(operationType string, n *NoodlesProject) {
+	if len(n.Requires) > 0 {
+		fmt.Printf("Running %s on project's Requires.\n", operationType)
+
+		for _, requiredProjectName := range n.Requires { // For each required project
+			if project, exists := noodles.Projects[requiredProjectName]; exists { // If this project exists
+				var plugin NoodlesPlugin
+
+				if project.Plugin == "go" {
+					plugin = &goPlugin
+				} else if project.Plugin == "less" {
+					plugin = &lessPlugin
+				} else if project.Plugin == "typescript" {
+					plugin = &typescriptPlugin
+				} else {
+					fmt.Printf("Failed to get the plugin for project %s and type %s\n", requiredProjectName, project.Plugin)
+					return
+				}
+
+				if operationType == "RequiresPreRun" { // If this is a PreRun operation
+					if project.Plugin == "go" { // If this is a Go-type project
+						if currentWd, getWdErr := os.Getwd(); getWdErr == nil { // Get the current working directory
+							if filepath.Base(currentWd) != "go" { // Currently not in go directory
+								os.Chdir(filepath.Join(workdir, "go")) // Change to our Go directory
+							}
+						}
+					}
+
+					plugin.RequiresPreRun(&project)
+				} else if operationType == "RequiresPostRun" { // If this is a PostRun operation
+					plugin.RequiresPostRun(&project)
+				}
+			} else {
+				fmt.Printf("Project %s does not exist.\n", requiredProjectName)
+				return
+			}
+		}
 	}
 }

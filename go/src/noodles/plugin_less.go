@@ -63,7 +63,7 @@ func (p *LessPlugin) PreRun(n *NoodlesProject) error {
 	return preRunErr
 }
 
-// PostRun is just a stub function. Doesn't actually do anything at the moment
+// PostRun will handle hash appending for generated CSS files, should it be enabled.
 func (p *LessPlugin) PostRun(n *NoodlesProject) error {
 	var postRunErr error
 
@@ -80,6 +80,16 @@ func (p *LessPlugin) PostRun(n *NoodlesProject) error {
 	}
 
 	return postRunErr
+}
+
+// RequiresPreRun is a stub function.
+func (p *LessPlugin) RequiresPreRun(n *NoodlesProject) error {
+	return nil
+}
+
+// RequiresPostRun is a stub function.
+func (p *LessPlugin) RequiresPostRun(n *NoodlesProject) error {
+	return nil
 }
 
 // Run will compile our LESS into CSS

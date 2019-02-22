@@ -155,6 +155,16 @@ func (p *TypeScriptPlugin) PostRun(n *NoodlesProject) error {
 	return postRunErr
 }
 
+// RequiresPreRun is a stub function.
+func (p *TypeScriptPlugin) RequiresPreRun(n *NoodlesProject) error {
+	return nil
+}
+
+// RequiresPostRun is a stub function.
+func (p *TypeScriptPlugin) RequiresPostRun(n *NoodlesProject) error {
+	return nil
+}
+
 // Run will run our TypeScript compilation
 func (p *TypeScriptPlugin) Run(n *NoodlesProject) error {
 	var runErr error

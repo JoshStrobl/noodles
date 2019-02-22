@@ -13,10 +13,15 @@ import (
 
 // GoPlugin is our Go plugin
 type GoPlugin struct {
-	CleanupFilesList []string
 }
 
 var originalGoPath string
+
+var temporaryTrackedCleanupFiles map[string][]string
+
+func init() {
+	temporaryTrackedCleanupFiles = make(map[string][]string)
+}
 
 // Check will check the specified project's settings related to our plugin
 func (p *GoPlugin) Check(n *NoodlesProject) NoodlesCheckResult {
@@ -42,13 +47,15 @@ func (p *GoPlugin) Check(n *NoodlesProject) NoodlesCheckResult {
 func (p *GoPlugin) CleanupFiles(n *NoodlesProject) error {
 	var cleanupErr error
 
-	if len(p.CleanupFilesList) > 0 { // If we have files to cleanup
-		for _, fileName := range p.CleanupFilesList { // For each file we need to cleanup
+	if cleanupFiles, exists := temporaryTrackedCleanupFiles[n.SimpleName]; exists { // If we have files to cleanup
+		for _, fileName := range cleanupFiles { // For each file we need to cleanup
 			if removeErr := os.Remove(filepath.Join(n.SourceDir, fileName)); removeErr != nil { // If we failed to remove this file
 				cleanupErr = removeErr
 				break
 			}
 		}
+
+		temporaryTrackedCleanupFiles[n.SimpleName] = []string{} // Reset
 	}
 
 	return cleanupErr
@@ -59,8 +66,6 @@ func (p *GoPlugin) ConsolidateFiles(n *NoodlesProject) error {
 	var consolidateErr error
 
 	if n.ConsolidateChildDirs { // If we should consolidate child directories into the root directory of the project
-		p.CleanupFilesList = []string{}
-
 		if sourceDirFile, sourceOpenErr := os.Open(n.SourceDir); sourceOpenErr == nil { // If we successfully opened the directory to read the contents
 			if files, fileReadDirErr := sourceDirFile.Readdir(-1); fileReadDirErr == nil { // If we successfully read the directory contents of the source dir
 				for _, file := range files { // For each file
@@ -171,7 +176,13 @@ func (p *GoPlugin) RecursiveCopy(dir string, n *NoodlesProject) error {
 					conflictFreePath := filepath.Join(n.SourceDir, conflictFreeFileName)
 
 					if copyErr := coreutils.CopyFile(originalFile, conflictFreePath); copyErr == nil { // If we successfully copied the file to our SourceDir
-						p.CleanupFilesList = append(p.CleanupFilesList, conflictFreeFileName) // Add to cleanup files
+						var cleanupFiles []string
+						var exists bool
+
+						if cleanupFiles, exists = temporaryTrackedCleanupFiles[n.SimpleName]; !exists { // Does not exist
+							cleanupFiles = []string{} // Set as an empty slice
+						}
+						temporaryTrackedCleanupFiles[n.SimpleName] = append(cleanupFiles, conflictFreeFileName) // Add to cleanup files
 					} else { // If we failed copying this file
 						recursiveCopyErr = copyErr
 						break
@@ -186,6 +197,19 @@ func (p *GoPlugin) RecursiveCopy(dir string, n *NoodlesProject) error {
 	}
 
 	return recursiveCopyErr
+}
+
+// RequiresPreRun is a stub function.
+func (p *GoPlugin) RequiresPreRun(n *NoodlesProject) error {
+	consolidateErr := p.ConsolidateFiles(n)
+	os.Chdir(workdir)
+
+	return consolidateErr
+}
+
+// RequiresPostRun is a stub function.
+func (p *GoPlugin) RequiresPostRun(n *NoodlesProject) error {
+	return p.CleanupFiles(n)
 }
 
 // Run will compile the provided project
@@ -237,8 +261,8 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 		if strings.Contains(goCompilerOutput, ".go") || strings.Contains(goCompilerOutput, "# ") { // If running the go build shows there are obvious issues
 			goCompilerOutput = strings.TrimSpace(goCompilerOutput) // Trim space
 
-			if len(p.CleanupFilesList) > 0 { // If we have cleanup files that could potentially have issues
-				for _, fileName := range p.CleanupFilesList { // For each cleanup file
+			if cleanupFiles, exists := temporaryTrackedCleanupFiles[n.SimpleName]; exists { // If we have cleanup files that could potentially have issues
+				for _, fileName := range cleanupFiles { // For each cleanup file
 					potentialFileListing := filepath.Join(n.SourceDir, fileName)                                       // Get the potential file listing
 					correctFileListing := filepath.Join(n.SourceDir, strings.Replace(fileName, "__", "/", -1))         // Replace all references of __ with /
 					goCompilerOutput = strings.Replace(goCompilerOutput, potentialFileListing, correctFileListing, -1) // Replace all old references

@@ -35,6 +35,12 @@ type NoodlesPlugin interface {
 	// PostRun is a function that should be performed after primary compilation
 	PostRun(n *NoodlesProject) error
 
+	// RequiresPreRun is a function that should be performed before PreRun, should the project be required by another
+	RequiresPreRun(n *NoodlesProject) error
+
+	// RequiresPostRun is a function that should be performed before PostRun, should the project be required by another
+	RequiresPostRun(n *NoodlesProject) error
+
 	// Run is the primary compilation function
 	Run(n *NoodlesProject) error
 }
