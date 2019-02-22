@@ -25,11 +25,21 @@ var noodles NoodlesConfig // Our Noodles Config
 
 // ReadConfig will read any local noodles.toml that exists and returns an error or NoodlesConfig
 func ReadConfig() error {
-	_, convErr := toml.DecodeFile(filepath.Join(workdir, "noodles.toml"), &noodles)
+	var readConfigErr error
 
-	if convErr != nil { // If there was an error decoding
+	if _, convErr := toml.DecodeFile(filepath.Join(workdir, "noodles.toml"), &noodles); convErr == nil { // Decode our config
+		for name, project := range noodles.Projects { // For each noodles project
+			project.SourceDir = filepath.Dir(project.Source)
+
+			if project.SourceDir != "" { // If SourceDir has content
+				project.SourceDir = project.SourceDir + "/" // Add trailing /
+			}
+
+			noodles.Projects[name] = project
+		}
+	} else { // If there was an error decoding
 		if strings.Contains(convErr.Error(), "no such file or directory") {
-			convErr = errors.New("noodles.toml does not exist in this directory")
+			readConfigErr = errors.New("noodles.toml does not exist in this directory")
 		} else { // If this is some sort of other error, sanitize it and return a new convErr
 			sanitizedErrMessage := strings.Replace(convErr.Error(), "unmarshal", "convert", -1) // Change "unmarshal" to a human language
 			sanitizedErrMessage = strings.Replace(sanitizedErrMessage, "!!", "", -1)
@@ -38,11 +48,11 @@ func ReadConfig() error {
 			re := regexp.MustCompile(`line\s\d+:\s[\s\S]+$`)                                    // Only get line N: message
 			lineErrors := re.FindAllString(sanitizedErrMessage, -1)                             // Find all strings
 			sanitizedErrMessage = strings.Replace(strings.Join(lineErrors, "\n"), "  ", "", -1) // Join all with newline and remove unnecessary whitespace
-			convErr = errors.New(sanitizedErrMessage)                                           // Create a sanitized error
+			readConfigErr = errors.New(sanitizedErrMessage)                                     // Create a sanitized error
 		}
 	}
 
-	return convErr
+	return readConfigErr
 }
 
 // SaveConfig will save the NoodlesConfig to noodles.toml

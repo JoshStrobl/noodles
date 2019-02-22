@@ -13,11 +13,10 @@ func (n *NoodlesProject) GetFiles(exclude string) []string {
 	var files []string
 
 	if n.Source != "" { // If a source is defined
-		filePath := filepath.Dir(n.Source)
 		fileName := filepath.Base(n.Source) // Get the file name
 
 		if strings.HasPrefix(fileName, "*") { // If we're globbing
-			files, _ = coreutils.GetFilesContains(filePath, filepath.Ext(fileName))
+			files, _ = coreutils.GetFilesContains(n.SourceDir, filepath.Ext(fileName))
 
 			if exclude != "" { // If exclude is set
 				tmpFiles := []string{}

@@ -13,6 +13,7 @@ import (
 
 // GoPlugin is our Go plugin
 type GoPlugin struct {
+	CleanupFiles []string
 }
 
 var originalGoPath string
@@ -40,9 +41,8 @@ func (p *GoPlugin) Check(n *NoodlesProject) NoodlesCheckResult {
 // Lint will lint our Go code. Lint takes a Noodles Project and the minimum acceptable confidence
 func (p *GoPlugin) Lint(n *NoodlesProject, confidence float64) error {
 	var lintErr error
-	sourceDir := filepath.Dir(n.Source)
 
-	goFiles, getErr := coreutils.GetFilesContains(sourceDir, ".go") // Get all files with .go extension
+	goFiles, getErr := coreutils.GetFilesContains(n.SourceDir, ".go") // Get all files with .go extension
 
 	if getErr == nil { // Get all files with .go extension
 		if len(goFiles) != 0 { // If we managed to find files
@@ -92,12 +92,82 @@ func (p *GoPlugin) PreRun(n *NoodlesProject) error {
 		preRunErr = ToggleGoEnv(true) // Enable the Go environment
 	}
 
+	if n.ConsolidateChildDirs { // If we should consolidate child directories into the root directory of the project
+		p.CleanupFiles = []string{}
+
+		if sourceDirFile, sourceOpenErr := os.Open(n.SourceDir); sourceOpenErr == nil { // If we successfully opened the directory to read the contents
+			if files, fileReadDirErr := sourceDirFile.Readdir(-1); fileReadDirErr == nil { // If we successfully read the directory contents of the source dir
+				for _, file := range files { // For each file
+					if file.IsDir() { // Is this a child dir inside our source dir
+						if copyErr := p.RecursiveCopy(filepath.Join(n.SourceDir, file.Name()), n); copyErr != nil { // If we failed to recursively copy the files
+							preRunErr = copyErr
+							break
+						}
+					}
+				}
+			} else { // If we failed to read the contents of the source dir
+				preRunErr = sourceOpenErr
+			}
+		} else {
+			preRunErr = sourceOpenErr
+		}
+	}
+
 	return preRunErr
 }
 
 // PostRun will reset our Go environment post-compilation
 func (p *GoPlugin) PostRun(n *NoodlesProject) error {
-	return ToggleGoEnv(false)
+	var postRunErr error
+
+	if len(p.CleanupFiles) > 0 { // If we have files to cleanup
+		for _, fileName := range p.CleanupFiles { // For each file we need to cleanup
+			if removeErr := os.Remove(filepath.Join(n.SourceDir, fileName)); removeErr != nil { // If we failed to remove this file
+				postRunErr = removeErr
+				break
+			}
+		}
+	}
+
+	postRunErr = ToggleGoEnv(false)
+	return postRunErr
+}
+
+// RecursiveCopy will recursively copy files in child directories of the specific dir to the project source directory
+// This function will rename the copied files to avoid conflicts. So if your file was x/y/z.go, it would change to x_y_z.go
+func (p *GoPlugin) RecursiveCopy(dir string, n *NoodlesProject) error {
+	var recursiveCopyErr error
+
+	if dirFile, dirOpenErr := os.Open(dir); dirOpenErr == nil { // If we successfully opened the directory to read the contents
+		if sourceDirItems, readDirErr := dirFile.Readdir(-1); readDirErr == nil { // Read all the contents of the directory as FileInfo structs
+			for _, fileInfo := range sourceDirItems { // For each directory item
+				if fileInfo.IsDir() { // If this is a directory
+					if innerCopyErr := p.RecursiveCopy(filepath.Join(dir, fileInfo.Name()), n); innerCopyErr != nil { // Perform a recursive copy, if we fail to do so then...
+						recursiveCopyErr = innerCopyErr
+						break
+					}
+				} else { // If this is a file
+					leadingPath := strings.Replace(dir, n.SourceDir, "", -1) // Remove the source directory
+					originalFile := filepath.Join(dir, fileInfo.Name())
+					conflictFreeFileName := strings.Replace(leadingPath, "/", "__", -1) + "__" + fileInfo.Name() // Replace all / with __ and add file name
+					conflictFreePath := filepath.Join(n.SourceDir, conflictFreeFileName)
+
+					if copyErr := coreutils.CopyFile(originalFile, conflictFreePath); copyErr == nil { // If we successfully copied the file to our SourceDir
+						p.CleanupFiles = append(p.CleanupFiles, conflictFreeFileName) // Add to cleanup files
+					} else { // If we failed copying this file
+						recursiveCopyErr = copyErr
+						break
+					}
+				}
+			}
+		} else { // Failed to read the directory
+			recursiveCopyErr = readDirErr
+		}
+	} else {
+		recursiveCopyErr = dirOpenErr
+	}
+
+	return recursiveCopyErr
 }
 
 // Run will compile the provided project
@@ -147,7 +217,17 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 		goCompilerOutput := coreutils.ExecCommand("go", args, true)
 
 		if strings.Contains(goCompilerOutput, ".go") || strings.Contains(goCompilerOutput, "# ") { // If running the go build shows there are obvious issues
-			runErr = errors.New(strings.TrimSpace(goCompilerOutput))
+			goCompilerOutput = strings.TrimSpace(goCompilerOutput) // Trim space
+
+			if len(p.CleanupFiles) > 0 { // If we have cleanup files that could potentially have issues
+				for _, fileName := range p.CleanupFiles { // For each cleanup file
+					potentialFileListing := filepath.Join(n.SourceDir, fileName)                                       // Get the potential file listing
+					correctFileListing := filepath.Join(n.SourceDir, strings.Replace(fileName, "__", "/", -1))         // Replace all references of __ with /
+					goCompilerOutput = strings.Replace(goCompilerOutput, potentialFileListing, correctFileListing, -1) // Replace all old references
+				}
+			}
+
+			runErr = errors.New(goCompilerOutput)
 		} else { // If there was no obvious issues
 			fmt.Println("Build successful.")
 
@@ -155,15 +235,14 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 				coreutils.ExecCommand("strip", []string{n.Destination}, true) // Strip the binary
 			}
 
-			sourceDir := filepath.Dir(n.Source)
-			if goFiles, getErr := coreutils.GetFilesContains(sourceDir, ".go"); getErr == nil { // Get all files with .go extension
+			if goFiles, getErr := coreutils.GetFilesContains(n.SourceDir, ".go"); getErr == nil { // Get all files with .go extension
 				if len(goFiles) != 0 { // If we managed to find files
 					args := []string{"-s", "-w"}
 					args = append(args, goFiles...)
 					coreutils.ExecCommand("gofmt", args, false) // Run formatting
 				}
 			} else { // If we failed to get files
-				runErr = errors.New("failed to get files from " + sourceDir + ": " + getErr.Error())
+				runErr = errors.New("failed to get files from " + n.SourceDir + ": " + getErr.Error())
 			}
 		}
 	} else { // If we failed to create the necessary directories
