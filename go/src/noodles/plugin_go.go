@@ -259,15 +259,8 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 		goCompilerOutput := coreutils.ExecCommand("go", args, true)
 
 		if strings.Contains(goCompilerOutput, ".go") || strings.Contains(goCompilerOutput, "# ") { // If running the go build shows there are obvious issues
-			goCompilerOutput = strings.TrimSpace(goCompilerOutput) // Trim space
-
-			if cleanupFiles, exists := temporaryTrackedCleanupFiles[n.SimpleName]; exists { // If we have cleanup files that could potentially have issues
-				for _, fileName := range cleanupFiles { // For each cleanup file
-					potentialFileListing := filepath.Join(n.SourceDir, fileName)                                       // Get the potential file listing
-					correctFileListing := filepath.Join(n.SourceDir, strings.Replace(fileName, "__", "/", -1))         // Replace all references of __ with /
-					goCompilerOutput = strings.Replace(goCompilerOutput, potentialFileListing, correctFileListing, -1) // Replace all old references
-				}
-			}
+			goCompilerOutput = strings.TrimSpace(goCompilerOutput)              // Trim space
+			goCompilerOutput = strings.Replace(goCompilerOutput, "__", "/", -1) // Replace all __ with /
 
 			runErr = errors.New(goCompilerOutput)
 		} else { // If there was no obvious issues
