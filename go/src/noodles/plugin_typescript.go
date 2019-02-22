@@ -40,6 +40,8 @@ func init() {
 	AdvancedTypescriptCompilerOptions = []string{
 		"--noFallthroughCasesInSwitch", // Disallow fallthrough cases in switches
 		"--noImplicitReturns",          // Disallow implicit returns
+		"--noUnusedLocals",             // Disallow unused locals
+		"--noUnusedParameters",         // Disallow unused parameters
 	}
 	AdvancedTypescriptCompilerOptions = append(AdvancedTypescriptCompilerOptions, SimpleTypescriptCompilerOptions...)
 
@@ -192,7 +194,7 @@ func (p *TypeScriptPlugin) Run(n *NoodlesProject) error {
 		n.Source, // Add source
 	}...)
 
-	commandOutput := coreutils.ExecCommand("tsc", tscFlags, false) // Call execCommand and get its commandOutput
+	commandOutput := coreutils.ExecCommand("tsc", tscFlags, true) // Call execCommand and get its commandOutput
 
 	if strings.Contains(commandOutput, "error TS") { // If tsc reported errors
 		runErr = errors.New(commandOutput)
