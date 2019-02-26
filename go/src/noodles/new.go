@@ -134,7 +134,7 @@ func NewProjectPrompt(newProjectName string) {
 	}
 
 	if plugin == "go" {
-		GoProjectPrompt(plugin, &project)
+		GoProjectPrompt(plugin, newProjectName, &project)
 	} else if plugin == "less" {
 		SourceDestinationPrompt(plugin, &project)
 		LESSProjectPrompt(&project)
@@ -152,7 +152,7 @@ func NewProjectPrompt(newProjectName string) {
 }
 
 // GoProjectPrompt will provide the necessary project prompts for a Go project
-func GoProjectPrompt(plugin string, project *NoodlesProject) {
+func GoProjectPrompt(plugin string, name string, project *NoodlesProject) {
 	typePrompt := promptui.Select{
 		Label: "Type",
 		Items: []string{"Binary", "Package", "Plugin"},
@@ -163,11 +163,15 @@ func GoProjectPrompt(plugin string, project *NoodlesProject) {
 
 	goType = strings.ToLower(goType)
 
-	if project.Type != "package" { // Binary or Plugin
+	if goType != "package" { // Binary or Plugin
 		SourceDestinationPrompt(plugin, project) // Request the sources and destinations
 
-		if project.Type == "plugin" { // Plugin
+		if goType == "plugin" { // Plugin
 			if filepath.Ext(project.Destination) != ".so" {
+				if project.Destination == "" { // If no destination is specified
+					project.Destination = filepath.Join("build", name)
+				}
+
 				project.Destination = project.Destination + ".so" // Append .so
 			}
 		}
@@ -175,6 +179,8 @@ func GoProjectPrompt(plugin string, project *NoodlesProject) {
 		pkgName := coreutils.InputMessage("Package name")
 		project.SimpleName = pkgName // Set our requested package name as the simple name
 	}
+
+	project.Type = goType
 }
 
 // LESSProjectPrompt will provide the necessary project prompts for a LESS project
