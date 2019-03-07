@@ -49,11 +49,7 @@ func (p *GoPlugin) CleanupFiles(n *NoodlesProject) error {
 
 	if cleanupFiles, exists := temporaryTrackedCleanupFiles[n.SimpleName]; exists { // If we have files to cleanup
 		for _, fileName := range cleanupFiles { // For each file we need to cleanup
-			filePath := filepath.Join(n.SourceDir, fileName)
-
-			if match, _ := filepath.Match("go/*", filePath); !match { // If this doesn't start with go/
-				filePath = filepath.Join("go", filePath)
-			}
+			filePath := p.GetCorrectGoFilePath(n, fileName)
 
 			if removeErr := os.Remove(filePath); removeErr != nil { // If we failed to remove this file
 				cleanupErr = removeErr
@@ -91,6 +87,40 @@ func (p *GoPlugin) ConsolidateFiles(n *NoodlesProject) error {
 	}
 
 	return consolidateErr
+}
+
+// Format will run gofmt against the files in this project
+func (p *GoPlugin) Format(n *NoodlesProject) error {
+	var formatErr error
+
+	if allFiles, getErr := coreutils.GetFilesContainsRecursive(n.SourceDir, ".go"); getErr == nil { // Get all files recursively
+		if len(allFiles) > 0 {
+			for _, file := range allFiles { // For each file
+				file = strings.Replace(file, n.SourceDir, "", 1) // Remove any redundant source dir from path
+				fullPath := p.GetCorrectGoFilePath(n, file)      // Get the right path for this file
+				args := []string{"-s", "-w", fullPath}
+				coreutils.ExecCommand("gofmt", args, false) // Run formatting
+			}
+		}
+	} else { // If we failed to get files
+		formatErr = errors.New("Failed to get files from " + n.SourceDir + ": " + getErr.Error())
+	}
+
+	return formatErr
+}
+
+// GetCorrectGoFilePath will attempt to get the correct path to the provided file
+func (p *GoPlugin) GetCorrectGoFilePath(n *NoodlesProject, fileName string) string {
+	var filePath string
+	currentDir, _ := os.Getwd()
+
+	if !strings.HasSuffix(currentDir, "/go") { // If we're currently not in go
+		filePath = filepath.Join("go", n.SourceDir, fileName) // Ensure we add go before SourceDir and filename
+	} else { // If we're currently in the go dir
+		filePath = filepath.Join(n.SourceDir, fileName) // Only have SourceDir and filename
+	}
+
+	return filePath
 }
 
 // Lint will lint our Go code. Lint takes a Noodles Project and the minimum acceptable confidence
@@ -147,7 +177,13 @@ func (p *GoPlugin) PreRun(n *NoodlesProject) error {
 		preRunErr = ToggleGoEnv(true) // Enable the Go environment
 	}
 
-	preRunErr = p.ConsolidateFiles(n)
+	if preRunErr == nil { // If we did not fail to find go or toggle env
+		preRunErr = p.Format(n) // Format the files in this project
+	}
+
+	if preRunErr == nil { // If we did not fail to format
+		preRunErr = p.ConsolidateFiles(n)
+	}
 
 	return preRunErr
 }
@@ -276,16 +312,6 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 
 			if n.Type == "binary" {
 				coreutils.ExecCommand("strip", []string{n.Destination}, true) // Strip the binary
-			}
-
-			if goFiles, getErr := coreutils.GetFilesContains(n.SourceDir, ".go"); getErr == nil { // Get all files with .go extension
-				if len(goFiles) != 0 { // If we managed to find files
-					args := []string{"-s", "-w"}
-					args = append(args, goFiles...)
-					coreutils.ExecCommand("gofmt", args, false) // Run formatting
-				}
-			} else { // If we failed to get files
-				runErr = errors.New("failed to get files from " + n.SourceDir + ": " + getErr.Error())
 			}
 		}
 	} else { // If we failed to create the necessary directories
