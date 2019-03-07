@@ -49,7 +49,13 @@ func (p *GoPlugin) CleanupFiles(n *NoodlesProject) error {
 
 	if cleanupFiles, exists := temporaryTrackedCleanupFiles[n.SimpleName]; exists { // If we have files to cleanup
 		for _, fileName := range cleanupFiles { // For each file we need to cleanup
-			if removeErr := os.Remove(filepath.Join(n.SourceDir, fileName)); removeErr != nil { // If we failed to remove this file
+			filePath := filepath.Join(n.SourceDir, fileName)
+
+			if match, _ := filepath.Match("go/*", filePath); !match { // If this doesn't start with go/
+				filePath = filepath.Join("go", filePath)
+			}
+
+			if removeErr := os.Remove(filePath); removeErr != nil { // If we failed to remove this file
 				cleanupErr = removeErr
 				break
 			}
@@ -151,7 +157,12 @@ func (p *GoPlugin) PostRun(n *NoodlesProject) error {
 	var postRunErr error
 
 	postRunErr = p.CleanupFiles(n) // Cleanup any files related to this project
-	postRunErr = ToggleGoEnv(false)
+
+	if postRunErr == nil { // If we successfully cleaned up the files
+		postRunErr = ToggleGoEnv(false)
+	} else { // If we did not successfully clean up the files
+		ToggleGoEnv(false) // Do not override our postRunErr from CleanupFiles, it is more important
+	}
 
 	return postRunErr
 }

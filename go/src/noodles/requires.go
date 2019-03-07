@@ -41,9 +41,13 @@ func RunRequires(operationType string, requires []string) {
 						}
 					}
 
-					plugin.RequiresPreRun(&project)
+					if preRunErr := plugin.RequiresPreRun(&project); preRunErr != nil { // If we failed in our PreRun
+						fmt.Printf("Failed to run %s PreRun: %s\n", projectOrScriptName, preRunErr.Error())
+					}
 				} else if operationType == "RequiresPostRun" { // If this is a PostRun operation
-					plugin.RequiresPostRun(&project)
+					if postRunErr := plugin.RequiresPostRun(&project); postRunErr != nil { // If we failed in our PostRun
+						fmt.Printf("Failed to run %s PostRun: %s\n", projectOrScriptName, postRunErr.Error())
+					}
 				}
 			} else if _, exists := noodles.Scripts[projectOrScriptName]; exists { // If this is a script
 				if (operationType == "RequiresPreRun" && !scriptRunAfter) || // Running before
