@@ -270,10 +270,7 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 		goCompilerOutput := coreutils.ExecCommand("go", args, true)
 
 		if strings.Contains(goCompilerOutput, ".go") || strings.Contains(goCompilerOutput, "# ") { // If running the go build shows there are obvious issues
-			goCompilerOutput = strings.TrimSpace(goCompilerOutput)              // Trim space
-			goCompilerOutput = strings.Replace(goCompilerOutput, "__", "/", -1) // Replace all __ with /
-
-			runErr = errors.New(goCompilerOutput)
+			runErr = errors.New(CleanupGoCompilerOutput(goCompilerOutput))
 		} else { // If there was no obvious issues
 			fmt.Println("Build successful.")
 
@@ -297,6 +294,13 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 	}
 
 	return runErr
+}
+
+// CleanupGoCompilerOutput will handle the cleanup of any strings that would otherwise result from ConsolidateChildDirs
+func CleanupGoCompilerOutput(output string) string {
+	output = strings.TrimSpace(output)              // Trim space
+	output = strings.Replace(output, "__", "/", -1) // Replace all __ with /
+	return output
 }
 
 // ToggleGoEnv will toggle our usage of GOPATH and working directory
