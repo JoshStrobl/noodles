@@ -45,6 +45,8 @@ func RunScript(name string) {
 	if script.Exec != "" { // If there is an executable
 		fmt.Printf("Running script: %s\n", name)
 
+		RunRequires("RequiresPreRun", script.Requires)
+
 		if script.UseGoEnv { // If we should be enforcing Go env
 			ToggleGoEnv(true)                                                        // Toggle env on
 			script.Directory = filepath.Join(workdir, "go", "src", script.Directory) // Ensure we prepend workdir and go
@@ -82,7 +84,8 @@ func RunScript(name string) {
 		}
 
 		os.Chdir(workdir) // Change back to the work dir if needed
+		RunRequires("RequiresPostRun", script.Requires)
 	} else {
-		fmt.Printf("No executable set for the script: %s", name)
+		fmt.Printf("No executable set for the script: %s\n", name)
 	}
 }

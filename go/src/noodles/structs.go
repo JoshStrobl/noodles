@@ -51,9 +51,10 @@ type NoodlesScript struct {
 	Description string   `toml:"Description,omitempty"`
 	Directory   string   `toml:"Directory,omitempty"`
 	Exec        string
-	File        string `toml:"File,omitempty"`
-	Redirect    bool   `toml:"Redirect,omitempty"`
-	UseGoEnv    bool   `toml:"UseGoEnv,omitempty"`
+	File        string   `toml:"File,omitempty"`
+	Redirect    bool     `toml:"Redirect,omitempty"`
+	Requires    []string `toml:"Requires,omitempty"`
+	UseGoEnv    bool     `toml:"UseGoEnv,omitempty"`
 }
 
 type validateFunc func(string) error

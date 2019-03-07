@@ -48,6 +48,7 @@ Version = 0.1
 		Description = "Script to test use of Go env in conjunction with directory"
 		Directory = "noodles"
 		Exec = "pwd"
+		Requires = ["argtest:after", "whoami"]
 		UseGoEnv = true
 	[Scripts.testfile]
 		File = "build/testoutput"
