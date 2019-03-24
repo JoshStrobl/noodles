@@ -22,10 +22,8 @@ func init() {
 	LessCompilerFlags = []string{
 		"--clean-css",
 		"--glob",
+		"--math=strict",
 		"--no-color",
-		"--no-ie-compat",
-		"--no-js",
-		"--strict-math=on",
 	}
 }
 

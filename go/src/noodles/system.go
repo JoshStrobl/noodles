@@ -40,7 +40,7 @@ func init() {
 		},
 		"less": {
 			Binary:       "lessc",
-			Dependencies: []string{"less", "less-plugin-clean-css", "less-plugin-glob"}, // LESS, Clean CSS plugin, Glob plugin
+			Dependencies: []string{"globby", "less", "less-plugin-clean-css", "less-plugin-glob"}, // LESS, Clean CSS plugin, Glob plugin
 			Packager:     "npm",
 		},
 		"nodejs": { // nodejs (for dependencies requiring npm)
