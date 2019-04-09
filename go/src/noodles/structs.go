@@ -5,20 +5,21 @@ type NoodlesCheckResult map[string][]string
 
 // NoodlesProject is the configuration for Noodles Projects.
 type NoodlesProject struct {
-	AppendHash           bool `toml:"AppendHash,omitempty"`
-	Compress             bool `toml:"Compress,omitempty"`
-	ConsolidateChildDirs bool `toml:ConsolidateChildDirs,omitempty"`
-	Destination          string
-	Flags                []string
-	Mode                 string `toml:"Mode,omitempty"`
-	Plugin               string
-	Requires             []string
-	SimpleName           string `toml:"SimpleName,omitempty"`
-	Source               string
-	SourceDir            string `toml:"-"`
-	TarballLocation      string `toml:"TarballLocation,omitempty"`
-	Target               string `toml:"Target,omitempty"`
-	Type                 string `toml:"Type,omitempty"`
+	AppendHash               bool `toml:"AppendHash,omitempty"`
+	Compress                 bool `toml:"Compress,omitempty"`
+	ConsolidateChildDirs     bool `toml:ConsolidateChildDirs,omitempty"`
+	Destination              string
+	DisableNestedEnvironment bool `toml:"DisableNestedEnvironment,omitempty"`
+	Flags                    []string
+	Mode                     string `toml:"Mode,omitempty"`
+	Plugin                   string
+	Requires                 []string
+	SimpleName               string `toml:"SimpleName,omitempty"`
+	Source                   string
+	SourceDir                string `toml:"-"`
+	TarballLocation          string `toml:"TarballLocation,omitempty"`
+	Target                   string `toml:"Target,omitempty"`
+	Type                     string `toml:"Type,omitempty"`
 }
 
 // NoodlesPlugin is an interface for plugins to implement

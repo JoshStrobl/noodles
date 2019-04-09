@@ -114,7 +114,7 @@ func (p *GoPlugin) GetCorrectGoFilePath(n *NoodlesProject, fileName string) stri
 	var filePath string
 	currentDir, _ := os.Getwd()
 
-	if !strings.HasSuffix(currentDir, "/go") { // If we're currently not in go
+	if !strings.HasSuffix(currentDir, "/go") && !n.DisableNestedEnvironment { // If we're currently not in go and we don't have nested env disabled
 		filePath = filepath.Join("go", n.SourceDir, fileName) // Ensure we add go before SourceDir and filename
 	} else { // If we're currently in the go dir
 		filePath = filepath.Join(n.SourceDir, fileName) // Only have SourceDir and filename
@@ -168,39 +168,41 @@ func (p *GoPlugin) Lint(n *NoodlesProject, confidence float64) error {
 }
 
 // PreRun will check if the necessary Go executable is installed
-func (p *GoPlugin) PreRun(n *NoodlesProject) error {
-	var preRunErr error
+func (p *GoPlugin) PreRun(n *NoodlesProject) (preRunErr error) {
 
 	if !coreutils.ExecutableExists("go") { // If the go executable does not exist
 		preRunErr = errors.New("go is not installed on your system. Please run noodles setup")
-	} else { // If the go executable exists
-		preRunErr = ToggleGoEnv(true) // Enable the Go environment
+		return
 	}
 
-	if preRunErr == nil { // If we did not fail to find go or toggle env
-		preRunErr = p.Format(n) // Format the files in this project
+	if !n.DisableNestedEnvironment { // If nested environment isn't disabled
+		if preRunErr = ToggleGoEnv(true); preRunErr != nil { // Failed to toggle go environment
+			return
+		}
 	}
 
-	if preRunErr == nil { // If we did not fail to format
-		preRunErr = p.ConsolidateFiles(n)
+	if preRunErr = p.Format(n); preRunErr != nil { // Failed to format the files in this project
+		return
 	}
 
-	return preRunErr
+	preRunErr = p.ConsolidateFiles(n) // Consolidate files
+
+	return
 }
 
 // PostRun will reset our Go environment post-compilation
-func (p *GoPlugin) PostRun(n *NoodlesProject) error {
-	var postRunErr error
-
+func (p *GoPlugin) PostRun(n *NoodlesProject) (postRunErr error) {
 	postRunErr = p.CleanupFiles(n) // Cleanup any files related to this project
 
-	if postRunErr == nil { // If we successfully cleaned up the files
-		postRunErr = ToggleGoEnv(false)
-	} else { // If we did not successfully clean up the files
-		ToggleGoEnv(false) // Do not override our postRunErr from CleanupFiles, it is more important
+	if !n.DisableNestedEnvironment { // If we don't have nested environment disabled
+		if postRunErr == nil { // If we successfully cleaned up the files and don't
+			postRunErr = ToggleGoEnv(false)
+		} else { // If we did not successfully clean up the files
+			ToggleGoEnv(false) // Do not override our postRunErr from CleanupFiles, it is more important
+		}
 	}
 
-	return postRunErr
+	return
 }
 
 // RecursiveCopy will recursively copy files in child directories of the specific dir to the project source directory
@@ -316,7 +318,6 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 		}
 	} else { // If we failed to create the necessary directories
 		fmt.Printf("failed to create the necessary directories:\n%s\n", runErr.Error())
-		ToggleGoEnv(false)
 	}
 
 	return runErr
@@ -330,8 +331,7 @@ func CleanupGoCompilerOutput(output string) string {
 }
 
 // ToggleGoEnv will toggle our usage of GOPATH and working directory
-func ToggleGoEnv(on bool) error {
-	var toggleEnvErr error
+func ToggleGoEnv(on bool) (toggleEnvErr error) {
 	if on {
 		goDir := filepath.Join(workdir, "go")
 		originalGoPath = os.Getenv("GOPATH") // Store the original GOPATH
@@ -343,5 +343,5 @@ func ToggleGoEnv(on bool) error {
 		}
 	}
 
-	return toggleEnvErr
+	return
 }
