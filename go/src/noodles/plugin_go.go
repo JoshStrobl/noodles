@@ -265,7 +265,7 @@ func (p *GoPlugin) RequiresPostRun(n *NoodlesProject) error {
 func (p *GoPlugin) Run(n *NoodlesProject) error {
 	var runErr error
 
-	if n.Destination == "" { // If a destination is set
+	if n.Destination == "" { // If a destination is not set
 		if n.Type == "binary" { // If this is a binary
 			n.Destination = filepath.Join(workdir, "build", n.SimpleName) // Set destination to build/name (as binary)
 		} else if n.Type == "package" { // Package
@@ -286,7 +286,12 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 	}
 
 	if (n.Type == "package") && n.Source == "" { // If this is a package and source is not set
-		n.Source = filepath.Join("src", n.SimpleName, "*.go") // Set our source to the package name
+		if !n.DisableNestedEnvironment { // If we haven't disabled nesting
+			n.Source = filepath.Join("src", n.SimpleName, "*.go") // Set our source to the package name
+		} else { // If we've disabled nesting, don't assume any directory
+			n.Source = filepath.Join(n.SimpleName, "*.go") // Set our source to the simplename + *.go
+			fmt.Println(n.Source)
+		}
 	}
 
 	if runErr == nil { // If there wasn't any error creating the necessary directories
@@ -301,13 +306,14 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 
 			args = append(args, []string{"-o", n.Destination}...)
 			args = append(args, files...)
-		} else { // Package
-			args = append(args, n.SimpleName)
+		} else if n.Type == "package" && !n.DisableNestedEnvironment { // Package and we're using a nested env
+			args = append(args, n.SimpleName) // Append the simple name of the package since that's what our GOPATH will recognize
 		}
 
 		goCompilerOutput := coreutils.ExecCommand("go", args, true)
 
-		if strings.Contains(goCompilerOutput, ".go") || strings.Contains(goCompilerOutput, "# ") { // If running the go build shows there are obvious issues
+		if strings.HasPrefix(goCompilerOutput, "can't load package") || // If running the go build returns its failure to find a package or import
+			strings.Contains(goCompilerOutput, ".go") || strings.Contains(goCompilerOutput, "# ") { // If running the go build shows there are obvious issues
 			runErr = errors.New(CleanupGoCompilerOutput(goCompilerOutput))
 		} else { // If there was no obvious issues
 			fmt.Println("Build successful.")
