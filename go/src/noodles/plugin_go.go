@@ -144,10 +144,13 @@ func (p *GoPlugin) Lint(n *NoodlesProject, confidence float64) error {
 						if len(problems) > 0 {
 							for _, problem := range problems { // For each problem
 								if problem.Confidence >= confidence { // If the linting confidence is equal to or greater than our requested minimum confidence
+									file := CleanupGoCompilerOutput(fileName)
+									text := CleanupGoCompilerOutput(problem.LineText)
+
 									// Example: test.go:24:34: test = errors.New("Hello world.")
 									// error strings should not be capitalized or end with punctuation or a newline
-									lineErr := strings.TrimSpace(problem.LineText) // Trim any spacing
-									fmt.Printf("%s:%d:%d: %s\n%s\n", fileName, problem.Position.Line, problem.Position.Column, lineErr, problem.Text)
+									lineErr := strings.TrimSpace(text) // Trim any spacing
+									fmt.Printf("%s:%d:%d: %s\n%s\n", file, problem.Position.Line, problem.Position.Column, lineErr, problem.Text)
 								}
 							}
 						}

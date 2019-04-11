@@ -27,7 +27,7 @@ func lint(cmd *cobra.Command, args []string) {
 			LintProject(name)
 		}
 	} else { // If a specific project is set
-		LintProject(buildProject)
+		LintProject(lintProject)
 	}
 }
 
