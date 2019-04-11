@@ -19,6 +19,7 @@ Version = 0.1
 		Target = "ES5"
 	[Projects.noodles]
 		Destination = "build/noodles"
+		EnableGoModules = true
 		Plugin = "go"
 		SimpleName = "noodles"
 		Source = "src/noodles/*.go"

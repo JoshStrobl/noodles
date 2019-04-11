@@ -15,6 +15,7 @@ import (
 type GoPlugin struct {
 }
 
+var originalGoModule string
 var originalGoPath string
 
 var temporaryTrackedCleanupFiles map[string][]string
@@ -175,6 +176,12 @@ func (p *GoPlugin) PreRun(n *NoodlesProject) (preRunErr error) {
 		return
 	}
 
+	if n.EnableGoModules { // If we should enable Go Modules
+		if preRunErr = ToggleGoModules(true); preRunErr != nil { // Failed to toggle go modules support
+			return
+		}
+	}
+
 	if !n.DisableNestedEnvironment { // If nested environment isn't disabled
 		if preRunErr = ToggleGoEnv(true); preRunErr != nil { // Failed to toggle go environment
 			return
@@ -192,6 +199,12 @@ func (p *GoPlugin) PreRun(n *NoodlesProject) (preRunErr error) {
 
 // PostRun will reset our Go environment post-compilation
 func (p *GoPlugin) PostRun(n *NoodlesProject) (postRunErr error) {
+	if n.EnableGoModules { // If we should enable Go Modules
+		if postRunErr = ToggleGoModules(false); postRunErr != nil { // Failed to toggle go modules support
+			return
+		}
+	}
+
 	postRunErr = p.CleanupFiles(n) // Cleanup any files related to this project
 
 	if !n.DisableNestedEnvironment { // If we don't have nested environment disabled
@@ -249,11 +262,11 @@ func (p *GoPlugin) RecursiveCopy(dir string, n *NoodlesProject) error {
 }
 
 // RequiresPreRun is a stub function.
-func (p *GoPlugin) RequiresPreRun(n *NoodlesProject) error {
-	consolidateErr := p.ConsolidateFiles(n)
+func (p *GoPlugin) RequiresPreRun(n *NoodlesProject) (requiresPreRunErr error) {
+	requiresPreRunErr = p.ConsolidateFiles(n)
 	os.Chdir(workdir)
 
-	return consolidateErr
+	return
 }
 
 // RequiresPostRun is a stub function.
@@ -290,7 +303,6 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 			n.Source = filepath.Join("src", n.SimpleName, "*.go") // Set our source to the package name
 		} else { // If we've disabled nesting, don't assume any directory
 			n.Source = filepath.Join(n.SimpleName, "*.go") // Set our source to the simplename + *.go
-			fmt.Println(n.Source)
 		}
 	}
 
@@ -312,7 +324,8 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 
 		goCompilerOutput := coreutils.ExecCommand("go", args, true)
 
-		if strings.HasPrefix(goCompilerOutput, "can't load package") || // If running the go build returns its failure to find a package or import
+		if strings.Contains(goCompilerOutput, "can't determine module path") || // If Go Modules are enabled but not yet init'ed
+			strings.Contains(goCompilerOutput, "can't load package") || // If running the go build returns its failure to find a package or import
 			strings.Contains(goCompilerOutput, ".go") || strings.Contains(goCompilerOutput, "# ") { // If running the go build shows there are obvious issues
 			runErr = errors.New(CleanupGoCompilerOutput(goCompilerOutput))
 		} else { // If there was no obvious issues
@@ -347,6 +360,18 @@ func ToggleGoEnv(on bool) (toggleEnvErr error) {
 		if toggleEnvErr = os.Setenv("GOPATH", originalGoPath); toggleEnvErr == nil { // If there was no error setting the environment
 			toggleEnvErr = os.Chdir(workdir)
 		}
+	}
+
+	return
+}
+
+// ToggleGoModules will toggle setting our GO111MODULE for go mod support
+func ToggleGoModules(on bool) (toggleModulesErr error) {
+	if on {
+		originalGoModule = os.Getenv("GO111MODULE")       // Store the original GO111MODULE
+		toggleModulesErr = os.Setenv("GO111MODULE", "on") // Set on
+	} else {
+		toggleModulesErr = os.Setenv("GO111MODULE", originalGoModule) // Set back to original
 	}
 
 	return

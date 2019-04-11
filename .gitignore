@@ -1,3 +1,5 @@
 build
+go/pkg
+pkg/
 noodles-*.tar*
 .noodles-pack
