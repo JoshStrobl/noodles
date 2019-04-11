@@ -73,8 +73,8 @@ func RunScript(name string) {
 			fmt.Printf("Running: %s\n", commandRunning)
 		}
 
-		output := coreutils.ExecCommand(script.Exec, script.Arguments, true)
-		fmt.Println(CleanupGoCompilerOutput(output))
+		output := coreutils.ExecCommand(script.Exec, script.Arguments, false)
+		fmt.Printf(CleanupGoCompilerOutput(output))
 
 		if (script.File != "") && script.Redirect { // If we should redirect output to a file
 			coreutils.WriteOrUpdateFile(script.File, []byte(output), coreutils.NonGlobalFileMode)
