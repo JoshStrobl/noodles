@@ -9,8 +9,9 @@ type NoodlesProject struct {
 	Compress                 bool `toml:"Compress,omitempty"`
 	ConsolidateChildDirs     bool `toml:ConsolidateChildDirs,omitempty"`
 	Destination              string
-	DisableNestedEnvironment bool `toml:"DisableNestedEnvironment,omitempty"`
-	EnableGoModules          bool `toml:"EnableGoModules,omitempty"`
+	DisableNestedEnvironment bool     `toml:"DisableNestedEnvironment,omitempty"`
+	EnableGoModules          bool     `toml:"EnableGoModules,omitempty"`
+	ExcludeItems             []string `toml:"ExcludeItems,omitempty"`
 	Flags                    []string
 	Mode                     string `toml:"Mode,omitempty"`
 	Plugin                   string

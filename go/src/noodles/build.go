@@ -16,9 +16,11 @@ var buildCmd = &cobra.Command{
 }
 
 var buildProject string
+var debug bool
 
 func init() {
 	buildCmd.Flags().StringVarP(&buildProject, "project", "p", "", "Name of a project we're building")
+	buildCmd.Flags().BoolVarP(&debug, "debug", "d", false, "Enable Debug Mode")
 }
 
 func build(cmd *cobra.Command, args []string) {

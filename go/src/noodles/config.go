@@ -35,6 +35,20 @@ func ReadConfig() error {
 				project.SourceDir = project.SourceDir + "/" // Add trailing /
 			}
 
+			if project.Type == "go" { // If this is a Go project
+				if len(project.ExcludeItems) == 0 { // No items
+					project.ExcludeItems = []string{"pkg/", "_test.go"} // Add pkg folder and _test.go files
+				} else { // Has items
+					if !ListContains(project.ExcludeItems, "pkg") {
+						project.ExcludeItems = append(project.ExcludeItems, "pkg")
+					}
+
+					if !ListContains(project.ExcludeItems, "_test.go") {
+						project.ExcludeItems = append(project.ExcludeItems, "_test.go")
+					}
+				}
+			}
+
 			noodles.Projects[name] = project
 		}
 	} else { // If there was an error decoding

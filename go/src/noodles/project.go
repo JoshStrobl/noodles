@@ -9,7 +9,7 @@ import (
 // General NoodlesProject functions
 
 // GetFiles will return all applicable files related to this project from Source
-func (n *NoodlesProject) GetFiles(exclude string) []string {
+func (n *NoodlesProject) GetFiles() []string {
 	var files []string
 
 	if n.Source != "" { // If a source is defined
@@ -17,13 +17,12 @@ func (n *NoodlesProject) GetFiles(exclude string) []string {
 
 		if strings.HasPrefix(fileName, "*") { // If we're globbing
 			files, _ = coreutils.GetFilesContains(n.SourceDir, filepath.Ext(fileName))
-
-			if exclude != "" { // If exclude is set
+			if len(n.ExcludeItems) != 0 { // If we should be excluding items
 				tmpFiles := []string{}
 
 				for _, file := range files { // For each file
-					if !strings.Contains(file, exclude) { // If the file does NOT contain the exclude string
-						tmpFiles = append(tmpFiles, file)
+					if !ListContains(n.ExcludeItems, file) { // If the file should not be excluded
+						tmpFiles = append(tmpFiles, file) // Add the file
 					}
 				}
 

@@ -72,8 +72,9 @@ func (p *GoPlugin) ConsolidateFiles(n *NoodlesProject) error {
 		if sourceDirFile, sourceOpenErr := os.Open(n.SourceDir); sourceOpenErr == nil { // If we successfully opened the directory to read the contents
 			if files, fileReadDirErr := sourceDirFile.Readdir(-1); fileReadDirErr == nil { // If we successfully read the directory contents of the source dir
 				for _, file := range files { // For each file
-					if file.IsDir() { // Is this a child dir inside our source dir
-						if copyErr := p.RecursiveCopy(filepath.Join(n.SourceDir, file.Name()), n); copyErr != nil { // If we failed to recursively copy the files
+					name := file.Name()
+					if file.IsDir() && !ListContains(n.ExcludeItems, name) { // Is this a child dir inside our source dir and it isn't intentionally excluded
+						if copyErr := p.RecursiveCopy(filepath.Join(n.SourceDir, name), n); copyErr != nil { // If we failed to recursively copy the files
 							consolidateErr = copyErr
 							break
 						}
@@ -313,7 +314,7 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 		args := []string{"build"}
 
 		if n.Type != "package" { // Binary or plugin
-			files := n.GetFiles("_test.go") // Exclude _test files
+			files := n.GetFiles() // Exclude _test files
 
 			if n.Type == "plugin" { // Plugin
 				args = append(args, []string{"-buildmode", "plugin"}...)
@@ -354,6 +355,10 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 
 			if n.Type == "binary" {
 				coreutils.ExecCommand("strip", []string{n.Destination}, true) // Strip the binary
+			}
+
+			if debug {
+				fmt.Println(goCompilerOutput) // Always output compiler content
 			}
 		} else {
 			runErr = errors.New(CleanupGoCompilerOutput(goCompilerOutput))
