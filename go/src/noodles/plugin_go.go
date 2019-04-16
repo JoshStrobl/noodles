@@ -326,18 +326,33 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 		}
 
 		goCompilerOutput := coreutils.ExecCommand("go", args, true)
+		var buildSuccessful bool
 
-		if strings.Contains(goCompilerOutput, "can't determine module path") || // If Go Modules are enabled but not yet init'ed
-			strings.Contains(goCompilerOutput, "can't load package") || // If running the go build returns its failure to find a package or import
-			strings.Contains(goCompilerOutput, "cannot load") || // If running go build returns it cannot load a package, typically when using Go modules with multiple paths in relative GOPATH
-			strings.Contains(goCompilerOutput, ".go") || strings.Contains(goCompilerOutput, "# ") { // If running the go build shows there are obvious issues
-			runErr = errors.New(CleanupGoCompilerOutput(goCompilerOutput))
-		} else { // If there was no obvious issues
+		if len(goCompilerOutput) != 0 {
+			compilerOutputLines := strings.Split(goCompilerOutput, "\n") // Split on newlines
+
+			for _, compilerOutputLine := range compilerOutputLines { // For each line
+				compilerOutputLine = strings.TrimSpace(compilerOutputLine) // Trim spacing
+
+				if len(compilerOutputLine) != 0 && !strings.HasPrefix(compilerOutputLine, "go: ") { // Likely error
+					buildSuccessful = false // Reset to false
+					break                   // Break, with buildSuccessful being false
+				} else {
+					buildSuccessful = true // Temporarily accept build may be successful
+				}
+			}
+		} else { // Absolutely no output, so a success (can happen when building and no errors, however not when pulling down modules at the same time)
+			buildSuccessful = true
+		}
+
+		if buildSuccessful {
 			fmt.Println("Build successful.")
 
 			if n.Type == "binary" {
 				coreutils.ExecCommand("strip", []string{n.Destination}, true) // Strip the binary
 			}
+		} else {
+			runErr = errors.New(CleanupGoCompilerOutput(goCompilerOutput))
 		}
 	} else { // If we failed to create the necessary directories
 		fmt.Printf("failed to create the necessary directories:\n%s\n", runErr.Error())
