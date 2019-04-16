@@ -334,7 +334,11 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 			for _, compilerOutputLine := range compilerOutputLines { // For each line
 				compilerOutputLine = strings.TrimSpace(compilerOutputLine) // Trim spacing
 
-				if len(compilerOutputLine) != 0 && !strings.HasPrefix(compilerOutputLine, "go: ") { // Likely error
+				if len(compilerOutputLine) != 0 &&
+					(strings.Contains(compilerOutputLine, "can't") || // Typically can't load package, failure to import
+						strings.Contains(compilerOutputLine, "cannot") || // Cannot load a package, namely when using Go modules with multiple paths in relative GOPATH
+						strings.Contains(compilerOutputLine, ".go") ||
+						strings.Contains(compilerOutputLine, "# ")) {
 					buildSuccessful = false // Reset to false
 					break                   // Break, with buildSuccessful being false
 				} else {
