@@ -329,6 +329,7 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 
 		if strings.Contains(goCompilerOutput, "can't determine module path") || // If Go Modules are enabled but not yet init'ed
 			strings.Contains(goCompilerOutput, "can't load package") || // If running the go build returns its failure to find a package or import
+			strings.Contains(goCompilerOutput, "cannot load") || // If running go build returns it cannot load a package, typically when using Go modules with multiple paths in relative GOPATH
 			strings.Contains(goCompilerOutput, ".go") || strings.Contains(goCompilerOutput, "# ") { // If running the go build shows there are obvious issues
 			runErr = errors.New(CleanupGoCompilerOutput(goCompilerOutput))
 		} else { // If there was no obvious issues
