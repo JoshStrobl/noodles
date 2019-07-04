@@ -87,7 +87,7 @@ func PromptExtensionValidate(expectedType, input string) error {
 	var promptExtensionError error
 
 	extension := filepath.Ext(input)                                                           // Get the extension
-	projectExtension := strings.ToLower(strings.Replace(expectedType, "TypeScript", "ts", -1)) // Replace TypeScript with ts and ensure lowercase for Go and LESS
+	projectExtension := strings.Replace(strings.ToLower(expectedType), "typescript", "ts", -1) // Replace typescript with ts and ensure lowercase
 
 	if len(input) > 0 && extension != "" { // If we've provided input
 		if extension[1:] != projectExtension { // If the extension provided by input (minus the prepended .) is not what we're expecting
