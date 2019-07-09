@@ -181,6 +181,15 @@ func GoProjectPrompt(plugin string, name string, project *NoodlesProject) {
 	}
 
 	project.Type = goType
+
+	enableGoModules := TextPromptValidate("Enable Go Modules [y/N]", TextYNValidate)
+	project.EnableGoModules = IsYes(enableGoModules)
+
+	consolidateChildDirs := TextPromptValidate("Enable nested directories [y/N]", TextYNValidate)
+	project.ConsolidateChildDirs = IsYes(consolidateChildDirs)
+
+	enableNestedEnvironment := TextPromptValidate("Enable self-contained Go workspace (forces src/go/ directory) [y/N]", TextYNValidate)
+	project.DisableNestedEnvironment = !IsYes(enableNestedEnvironment) // Invert our provided value, so if we're enabling (y) then mark to disable as false
 }
 
 // LESSProjectPrompt will provide the necessary project prompts for a LESS project

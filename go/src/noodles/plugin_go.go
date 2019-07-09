@@ -73,7 +73,7 @@ func (p *GoPlugin) ConsolidateFiles(n *NoodlesProject) error {
 			if files, fileReadDirErr := sourceDirFile.Readdir(-1); fileReadDirErr == nil { // If we successfully read the directory contents of the source dir
 				for _, file := range files { // For each file
 					name := file.Name()
-					if file.IsDir() && !ListContains(n.ExcludeItems, name) { // Is this a child dir inside our source dir and it isn't intentionally excluded
+					if file.IsDir() && !ListContains(n.ExcludeItems, name) && !strings.HasPrefix(name, ".") { // Is this a non-hidden child dir inside our source dir and it isn't intentionally excluded
 						if copyErr := p.RecursiveCopy(filepath.Join(n.SourceDir, name), n); copyErr != nil { // If we failed to recursively copy the files
 							consolidateErr = copyErr
 							break
