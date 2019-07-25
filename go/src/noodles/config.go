@@ -24,11 +24,13 @@ type NoodlesConfig struct {
 var noodles NoodlesConfig // Our Noodles Config
 
 // ReadConfig will read any local noodles.toml that exists and returns an error or NoodlesConfig
-func ReadConfig() error {
-	var readConfigErr error
+func ReadConfig(configPath string) (conf NoodlesConfig, readConfigErr error) {
+	if _, convErr := toml.DecodeFile(configPath, &conf); convErr == nil { // Decode our config
+		for name, project := range conf.Projects { // For each noodles project
+			if project.ConsolidateChildDirs && (project.SimpleName == "") { // No SimpleName defined, and it'll be required during consolidation
+				project.SimpleName = name
+			}
 
-	if _, convErr := toml.DecodeFile(filepath.Join(workdir, "noodles.toml"), &noodles); convErr == nil { // Decode our config
-		for name, project := range noodles.Projects { // For each noodles project
 			project.SourceDir = filepath.Dir(project.Source)
 
 			if project.SourceDir != "" { // If SourceDir has content
@@ -49,7 +51,7 @@ func ReadConfig() error {
 				}
 			}
 
-			noodles.Projects[name] = project
+			conf.Projects[name] = project
 		}
 	} else { // If there was an error decoding
 		if strings.Contains(convErr.Error(), "no such file or directory") {
@@ -66,7 +68,7 @@ func ReadConfig() error {
 		}
 	}
 
-	return readConfigErr
+	return
 }
 
 // SaveConfig will save the NoodlesConfig to noodles.toml

@@ -8,7 +8,7 @@ require (
 	github.com/manifoldco/promptui v0.3.2
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3 // indirect
-	github.com/stroblindustries/coreutils v0.0.0-20181012211232-e8b103258780
+	github.com/stroblindustries/coreutils v0.0.0-20190725145540-a4ebaf6295bb // indirect
 	golang.org/x/lint v0.0.0-20190409202823-959b441ac422
 	gopkg.in/yaml.v2 v2.2.2 // indirect
 )

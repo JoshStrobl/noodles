@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"os"
+	"path/filepath"
 )
 
 var checkCmd = &cobra.Command{
@@ -17,9 +18,9 @@ var checkCmd = &cobra.Command{
 
 // check will validate noodles.toml
 func check(cmd *cobra.Command, args []string) {
-	readErr := ReadConfig() // Read the config
-
-	if readErr != nil { // If there was a read error on the config
+	if conf, readErr := ReadConfig(filepath.Join(workdir, "noodles.toml")); readErr == nil { // Read the config
+		noodles = conf
+	} else {
 		fmt.Printf("noodles.toml appears to have the following issue(s):\n%s\n", readErr.Error())
 		os.Exit(1)
 	}

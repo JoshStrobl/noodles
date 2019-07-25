@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"os"
+	"path/filepath"
 )
 
 // Plugins
@@ -23,7 +24,12 @@ var rootCmd = &cobra.Command{
 	- compilation of project(s) in a configurable, ordered manner
 	- configurable packing of project assets for distribution`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		ReadConfig() // Read the config (if it exists)
+		if conf, readErr := ReadConfig(filepath.Join(workdir, "noodles.toml")); readErr == nil { // Read the config
+			noodles = conf
+		} else {
+			fmt.Printf("noodles.toml appears to have the following issue(s):\n%s\n", readErr.Error())
+			os.Exit(1)
+		}
 	},
 	DisableAutoGenTag: true,
 }

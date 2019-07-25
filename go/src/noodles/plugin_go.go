@@ -45,23 +45,18 @@ func (p *GoPlugin) Check(n *NoodlesProject) NoodlesCheckResult {
 }
 
 // CleanupFiles will clean up any tracked files
-func (p *GoPlugin) CleanupFiles(n *NoodlesProject) error {
-	var cleanupErr error
-
-	if cleanupFiles, exists := temporaryTrackedCleanupFiles[n.SimpleName]; exists { // If we have files to cleanup
-		for _, fileName := range cleanupFiles { // For each file we need to cleanup
-			filePath := p.GetCorrectGoFilePath(n, fileName)
-
-			if removeErr := os.Remove(filePath); removeErr != nil { // If we failed to remove this file
-				cleanupErr = removeErr
+func (p *GoPlugin) CleanupFiles(n *NoodlesProject) (cleanupErr error) {
+	for key, cleanupFiles := range temporaryTrackedCleanupFiles { // For each key and list of files we should clean up
+		for _, filePath := range cleanupFiles { // For each file we need to cleanup
+			if cleanupErr = os.Remove(filePath); cleanupErr != nil { // If we failed to remove this file
 				break
 			}
 		}
 
-		temporaryTrackedCleanupFiles[n.SimpleName] = []string{} // Reset
+		temporaryTrackedCleanupFiles[key] = []string{} // Reset
 	}
 
-	return cleanupErr
+	return
 }
 
 // ConsolidateFiles will consolidate any files in child directories, if ConsolidateChildDirs is enabled
@@ -70,7 +65,35 @@ func (p *GoPlugin) ConsolidateFiles(n *NoodlesProject) (consolidateErr error) {
 		p.Flatten(n.SimpleName, n.SourceDir, n.SourceDir, n.ExcludeItems) // Ensure all child directories within the root of our project are flattened
 	}
 
-	return consolidateErr
+	if n.EnableGoModules && !n.DisableNestedEnvironment { // If we've enabled Go Modules and have not disabled the use of our nested environment
+		coreutils.ExecCommand("go", []string{"mod", "download"}, false) // Ensure we've pre-cached the modules before changing them
+		pkgModPath := filepath.Join(workdir, "go", "pkg", "mod")        // Set up our mod path
+
+		var nestedNoodleWorkspacesFilesList []string
+		if nestedNoodleWorkspacesFilesList, consolidateErr = coreutils.GetFilesContainsRecursive(pkgModPath, "noodles.toml"); consolidateErr != nil { // Check for any directory which has noodles.toml
+			return
+		}
+
+		for _, namespaceDir := range nestedNoodleWorkspacesFilesList { // For each reference to noodles.toml
+			dir := filepath.Dir(namespaceDir) // Ensure we remove noodles.toml from path
+
+			chmodErr := filepath.Walk(dir, func(dirEntryName string, info os.FileInfo, err error) error {
+				return os.Chmod(dirEntryName, 0770)
+			})
+
+			if chmodErr != nil { // Ensure it is actually writable
+				fmt.Printf("Failed to change permission: %s\n", chmodErr)
+			}
+
+			repoName := filepath.Base(dir) // Get the repo name
+
+			if flattenErr := p.Flatten(repoName, dir, dir, n.ExcludeItems); flattenErr != nil { // Flatten this Noodles Workspace
+				fmt.Printf("Failed to flatten %s: %s\n", flattenErr)
+			}
+		}
+	}
+
+	return
 }
 
 // Flatten will attempt to get all files from the srcDir (or nested) and consolidate them in the targetDir specified
@@ -102,7 +125,9 @@ func (p *GoPlugin) Flatten(tempTrackingKey string, srcDir string, targetDir stri
 				break
 			}
 		} else if !fileInfo.IsDir() { // If this is a file
-			leadingPath := strings.Replace(srcDir, targetDir, "", -1)   // Ensure we remove all references to targetDir from srcDir path
+			leadingPath := strings.Replace(srcDir, targetDir, "", -1) // Ensure we remove all references to targetDir from srcDir path
+			leadingPath = strings.TrimPrefix(leadingPath, "/")        // Trim any starting /
+
 			if originalFilePath != filepath.Join(targetDir, fileName) { // If this isn't at the root of targetDir (if sourceDir and targetDir are same)
 				conflictFreeFileName := strings.Replace(leadingPath, "/", "__", -1) + "__" + fileName // Replace all / with __ and add file name
 				conflictFreePath := filepath.Join(targetDir, conflictFreeFileName)
@@ -115,7 +140,7 @@ func (p *GoPlugin) Flatten(tempTrackingKey string, srcDir string, targetDir stri
 						cleanupFiles = []string{} // Set as an empty slice
 					}
 
-					temporaryTrackedCleanupFiles[tempTrackingKey] = append(cleanupFiles, conflictFreeFileName) // Add to cleanup files
+					temporaryTrackedCleanupFiles[tempTrackingKey] = append(cleanupFiles, conflictFreePath) // Add to cleanup files
 				} else { // If we failed copying this file
 					flattenErr = copyErr
 					break
