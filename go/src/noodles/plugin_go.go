@@ -65,30 +65,66 @@ func (p *GoPlugin) CleanupFiles(n *NoodlesProject) error {
 }
 
 // ConsolidateFiles will consolidate any files in child directories, if ConsolidateChildDirs is enabled
-func (p *GoPlugin) ConsolidateFiles(n *NoodlesProject) error {
-	var consolidateErr error
-
+func (p *GoPlugin) ConsolidateFiles(n *NoodlesProject) (consolidateErr error) {
 	if n.ConsolidateChildDirs { // If we should consolidate child directories into the root directory of the project
-		if sourceDirFile, sourceOpenErr := os.Open(n.SourceDir); sourceOpenErr == nil { // If we successfully opened the directory to read the contents
-			if files, fileReadDirErr := sourceDirFile.Readdir(-1); fileReadDirErr == nil { // If we successfully read the directory contents of the source dir
-				for _, file := range files { // For each file
-					name := file.Name()
-					if file.IsDir() && !ListContains(n.ExcludeItems, name) && !strings.HasPrefix(name, ".") { // Is this a non-hidden child dir inside our source dir and it isn't intentionally excluded
-						if copyErr := p.RecursiveCopy(filepath.Join(n.SourceDir, name), n); copyErr != nil { // If we failed to recursively copy the files
-							consolidateErr = copyErr
-							break
-						}
-					}
-				}
-			} else { // If we failed to read the contents of the source dir
-				consolidateErr = sourceOpenErr
-			}
-		} else {
-			consolidateErr = sourceOpenErr
-		}
+		p.Flatten(n.SimpleName, n.SourceDir, n.SourceDir, n.ExcludeItems) // Ensure all child directories within the root of our project are flattened
 	}
 
 	return consolidateErr
+}
+
+// Flatten will attempt to get all files from the srcDir (or nested) and consolidate them in the targetDir specified
+// This will also automatically add them to our "tracked" files to clean up
+func (p *GoPlugin) Flatten(tempTrackingKey string, srcDir string, targetDir string, exclude []string) (flattenErr error) {
+	var sourceDirFile *os.File
+	if sourceDirFile, flattenErr = os.Open(srcDir); flattenErr != nil {
+		return
+	}
+
+	var sourceDirItems []os.FileInfo
+	if sourceDirItems, flattenErr = sourceDirFile.Readdir(-1); flattenErr != nil { // Read all the items from this directory
+		return
+	}
+
+	for _, fileInfo := range sourceDirItems { // For each directory item
+		fileName := fileInfo.Name()
+		originalFilePath := filepath.Join(srcDir, fileName)
+
+		if ListContains(exclude, fileName) { // If this item should be excluded
+			continue // This actually skips this specific iteration and moves onto the next
+		}
+
+		if fileInfo.IsDir() && !strings.HasPrefix(fileName, ".") { // If this is a non-hidden directory
+			nestedSrcDir := filepath.Join(srcDir, fileName)
+
+			if innerFlattenErr := p.Flatten(tempTrackingKey, nestedSrcDir, targetDir, exclude); innerFlattenErr != nil { // Perform a recursive flatten
+				flattenErr = innerFlattenErr
+				break
+			}
+		} else if !fileInfo.IsDir() { // If this is a file
+			leadingPath := strings.Replace(srcDir, targetDir, "", -1)   // Ensure we remove all references to targetDir from srcDir path
+			if originalFilePath != filepath.Join(targetDir, fileName) { // If this isn't at the root of targetDir (if sourceDir and targetDir are same)
+				conflictFreeFileName := strings.Replace(leadingPath, "/", "__", -1) + "__" + fileName // Replace all / with __ and add file name
+				conflictFreePath := filepath.Join(targetDir, conflictFreeFileName)
+
+				if copyErr := coreutils.CopyFile(originalFilePath, conflictFreePath); copyErr == nil { // If we successfully copied the file to our target directory
+					var cleanupFiles []string
+					var exists bool
+
+					if cleanupFiles, exists = temporaryTrackedCleanupFiles[tempTrackingKey]; !exists { // Does not exist
+						cleanupFiles = []string{} // Set as an empty slice
+					}
+
+					temporaryTrackedCleanupFiles[tempTrackingKey] = append(cleanupFiles, conflictFreeFileName) // Add to cleanup files
+				} else { // If we failed copying this file
+					flattenErr = copyErr
+					break
+				}
+			}
+		}
+	}
+
+	return
 }
 
 // Format will run gofmt against the files in this project
@@ -216,49 +252,6 @@ func (p *GoPlugin) PostRun(n *NoodlesProject) (postRunErr error) {
 	}
 
 	return
-}
-
-// RecursiveCopy will recursively copy files in child directories of the specific dir to the project source directory
-// This function will rename the copied files to avoid conflicts. So if your file was x/y/z.go, it would change to x_y_z.go
-func (p *GoPlugin) RecursiveCopy(dir string, n *NoodlesProject) error {
-	var recursiveCopyErr error
-
-	if dirFile, dirOpenErr := os.Open(dir); dirOpenErr == nil { // If we successfully opened the directory to read the contents
-		if sourceDirItems, readDirErr := dirFile.Readdir(-1); readDirErr == nil { // Read all the contents of the directory as FileInfo structs
-			for _, fileInfo := range sourceDirItems { // For each directory item
-				if fileInfo.IsDir() { // If this is a directory
-					if innerCopyErr := p.RecursiveCopy(filepath.Join(dir, fileInfo.Name()), n); innerCopyErr != nil { // Perform a recursive copy, if we fail to do so then...
-						recursiveCopyErr = innerCopyErr
-						break
-					}
-				} else { // If this is a file
-					leadingPath := strings.Replace(dir, n.SourceDir, "", -1) // Remove the source directory
-					originalFile := filepath.Join(dir, fileInfo.Name())
-					conflictFreeFileName := strings.Replace(leadingPath, "/", "__", -1) + "__" + fileInfo.Name() // Replace all / with __ and add file name
-					conflictFreePath := filepath.Join(n.SourceDir, conflictFreeFileName)
-
-					if copyErr := coreutils.CopyFile(originalFile, conflictFreePath); copyErr == nil { // If we successfully copied the file to our SourceDir
-						var cleanupFiles []string
-						var exists bool
-
-						if cleanupFiles, exists = temporaryTrackedCleanupFiles[n.SimpleName]; !exists { // Does not exist
-							cleanupFiles = []string{} // Set as an empty slice
-						}
-						temporaryTrackedCleanupFiles[n.SimpleName] = append(cleanupFiles, conflictFreeFileName) // Add to cleanup files
-					} else { // If we failed copying this file
-						recursiveCopyErr = copyErr
-						break
-					}
-				}
-			}
-		} else { // Failed to read the directory
-			recursiveCopyErr = readDirErr
-		}
-	} else {
-		recursiveCopyErr = dirOpenErr
-	}
-
-	return recursiveCopyErr
 }
 
 // RequiresPreRun is a stub function.
