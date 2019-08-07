@@ -24,7 +24,7 @@ var rootCmd = &cobra.Command{
 	- compilation of project(s) in a configurable, ordered manner
 	- configurable packing of project assets for distribution`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if cmd.Use != "new" { // If we're not potentially creating a new Noodles workspace
+		if cmd.Use != "new" || (cmd.Use == "new" && (newProjectName != "") || (newScriptName != "")) { // If we're not creating a new Noodles workspace
 			if conf, readErr := ReadConfig(filepath.Join(workdir, "noodles.toml")); readErr == nil { // Read the config
 				noodles = conf
 			} else {
