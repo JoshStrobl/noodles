@@ -24,11 +24,13 @@ var rootCmd = &cobra.Command{
 	- compilation of project(s) in a configurable, ordered manner
 	- configurable packing of project assets for distribution`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if conf, readErr := ReadConfig(filepath.Join(workdir, "noodles.toml")); readErr == nil { // Read the config
-			noodles = conf
-		} else {
-			fmt.Printf("noodles.toml appears to have the following issue(s):\n%s\n", readErr.Error())
-			os.Exit(1)
+		if cmd.Use != "new" { // If we're not potentially creating a new Noodles workspace
+			if conf, readErr := ReadConfig(filepath.Join(workdir, "noodles.toml")); readErr == nil { // Read the config
+				noodles = conf
+			} else {
+				fmt.Printf("noodles.toml appears to have the following issue(s):\n%s\n", readErr.Error())
+				os.Exit(1)
+			}
 		}
 	},
 	DisableAutoGenTag: true,
