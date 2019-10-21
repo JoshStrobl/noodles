@@ -17,6 +17,7 @@ type GoPlugin struct {
 
 var originalGoModule string
 var originalGoPath string
+var originalGoPrivate string
 
 var temporaryTrackedCleanupFiles map[string][]string
 
@@ -251,6 +252,15 @@ func (p *GoPlugin) PreRun(n *NoodlesProject) (preRunErr error) {
 		}
 	}
 
+	if len(n.Private) != 0 { // Have Private / non-public module URIs set
+		originalGoPrivate = os.Getenv("GOPRIVATE")                       // Get the original GOPRIVATE value
+		preRunErr = os.Setenv("GOPRIVATE", strings.Join(n.Private, ",")) // Set GOPRIVATE to comma-separated n.Private list
+
+		if preRunErr != nil {
+			return
+		}
+	}
+
 	if preRunErr = p.Format(n); preRunErr != nil { // Failed to format the files in this project
 		return
 	}
@@ -264,6 +274,10 @@ func (p *GoPlugin) PreRun(n *NoodlesProject) (preRunErr error) {
 func (p *GoPlugin) PostRun(n *NoodlesProject) (postRunErr error) {
 	if postRunErr = ToggleGoModules(false, true); postRunErr != nil { // Failed to reset go modules support
 		return
+	}
+
+	if originalGoPrivate != "" { // Non-empty original value
+		os.Setenv("GOPRIVATE", originalGoPrivate)
 	}
 
 	postRunErr = p.CleanupFiles(n) // Cleanup any files related to this project

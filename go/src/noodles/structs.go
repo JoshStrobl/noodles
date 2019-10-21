@@ -15,6 +15,7 @@ type NoodlesProject struct {
 	Flags                    []string
 	Mode                     string `toml:"Mode,omitempty"`
 	Plugin                   string
+	Private                  []string `toml:"Private,omitempty"`
 	Requires                 []string
 	SimpleName               string `toml:"SimpleName,omitempty"`
 	Source                   string
