@@ -96,7 +96,7 @@ func (p *TypeScriptPlugin) Lint(n *NoodlesProject, confidence float64) error {
 // PreRun will check if the necessary executables for TypeScript and compression are installed
 func (p *TypeScriptPlugin) PreRun(n *NoodlesProject) error {
 	var preRunErr error
-	executables := []string{"tsc", "uglifyjs2"}
+	executables := []string{DependenciesMap["compress"].Binary, DependenciesMap["typescript"].Binary}
 
 	for _, executable := range executables { // For each executable
 		if !coreutils.ExecutableExists(executable) { // If this executable does not exist
@@ -118,14 +118,13 @@ func (p *TypeScriptPlugin) PostRun(n *NoodlesProject) error {
 		fmt.Println("Minifying compiled JavaScript.")
 
 		uglifyArgs := []string{ // Define uglifyArgs
-			n.Destination,    // Input
-			"--compress",     // Yes, I like to compress things
-			"--mangle",       // Mangle variable names
-			"warnings=false", // Don't provide warnings
+			n.Destination, // Input
+			"--compress",  // Yes, I like to compress things
+			"--mangle",    // Mangle variable names
 		}
 
-		closureOutput := coreutils.ExecCommand("uglifyjs2", uglifyArgs, true) // Run Google Closure Compiler and store the output in closureOutput
-		nodeDeprecationRemover, _ := regexp.Compile(`\(node\:.+\n`)           // Remove any lines starting with (node:
+		closureOutput := coreutils.ExecCommand("uglifyjs", uglifyArgs, true) // Run Google Closure Compiler and store the output in closureOutput
+		nodeDeprecationRemover, _ := regexp.Compile(`\(node\:.+\n`)          // Remove any lines starting with (node:
 		closureOutput = nodeDeprecationRemover.ReplaceAllString(closureOutput, "")
 		closureOutput = strings.TrimSpace(closureOutput) // Fix trailing newlines
 

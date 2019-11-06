@@ -24,8 +24,8 @@ func init() {
 
 	DependenciesMap = map[string]DependencyMap{ // Map of all the deps you'll need based on project configuration options
 		"compress": { // Compression for TypeScript
-			Binary:       "uglifyjs2",
-			Dependencies: []string{"uglify-js2"},
+			Binary:       "uglifyjs",
+			Dependencies: []string{"uglify-js"},
 			Packager:     "npm",
 		},
 		"go": { // Golang

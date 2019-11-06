@@ -100,7 +100,7 @@ func HasDependencies(p NoodlesProject) (bool, []string) {
 		binaries := []string{pluginDepMap.Binary} // Set binaries to a slice of strings, where our initial string is our primary binary
 
 		if p.Plugin == "typescript" && p.Compress { // If the project uses the Typescript plugin as well as compression (needs uglifyjs2)
-			binaries = append(binaries, []string{"uglifyjs2"}...) // Include uglifyjs2 as well
+			binaries = append(binaries, DependenciesMap["compress"].Binary) // Include uglifyjs2 as well
 		}
 
 		if depsExist = coreutils.ExecutableExists("npm"); !depsExist { // If npm exists
@@ -109,7 +109,7 @@ func HasDependencies(p NoodlesProject) (bool, []string) {
 
 		for _, binary := range binaries { // For each binary
 			if depsExist = coreutils.ExecutableExists(binary); !depsExist { // If the binary does not exist
-				if binary == "uglifyjs2" { // If this is uglifyjs2 (uglify-js 2)
+				if binary == "uglifyjs" { // If this is uglifyjs
 					pluginDepMap = DependenciesMap["compress"] // Change pluginDepMap to the one for compress
 				}
 
