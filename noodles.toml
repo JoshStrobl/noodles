@@ -16,7 +16,7 @@ Version = 0.1
 		Plugin = "typescript"
 		SimpleName = "exampletypescript"
 		Source = "src/typescript/example/example.ts"
-		Target = "ES5"
+		Target = "ES2019"
 	[Projects.noodles]
 		Destination = "build/noodles"
 		EnableGoModules = true

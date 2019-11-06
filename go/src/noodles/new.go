@@ -231,7 +231,7 @@ func TypeScriptProjectPrompt(project *NoodlesProject) {
 
 	targetPrompt := promptui.Select{
 		Label: "Target",
-		Items: []string{"ES5", "ES6", "ES7"},
+		Items: ValidTypeScriptTargets,
 	}
 
 	_, targetPromptVal, targetPromptErr := targetPrompt.Run()

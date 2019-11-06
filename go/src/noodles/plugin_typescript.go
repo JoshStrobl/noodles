@@ -52,7 +52,7 @@ func init() {
 	StrictTypescriptCompilerOptions = append(StrictTypescriptCompilerOptions, AdvancedTypescriptCompilerOptions...)
 
 	ValidTypeScriptModes = []string{"simple", "advanced", "strict"}
-	ValidTypeScriptTargets = []string{"ES5", "ES6", "ES7"}
+	ValidTypeScriptTargets = []string{"ES2017", "ES2018", "ES2019", "ES2020", "ESNext"}
 }
 
 // Check will check the specified project's settings related to our plugin
@@ -74,9 +74,9 @@ func (p *TypeScriptPlugin) Check(n *NoodlesProject) NoodlesCheckResult {
 	}
 
 	if n.Target == "" {
-		recommendations = append(recommendations, "No Target set, meaning we default to ES5. Recommend setting Target to ES5, ES6, or ES7.")
+		recommendations = append(recommendations, "No Target set, meaning we default to the latest formal specification, currently ES2018.")
 	} else if !ListContains(ValidTypeScriptTargets, n.Target) {
-		errors = append(errors, "No valid target set. Must be ES5, ES6, or ES7.")
+		errors = append(errors, "No valid target set. Must be "+strings.Join(ValidTypeScriptTargets, ", "))
 	}
 
 	results["Deprecations"] = deprecations
@@ -123,8 +123,8 @@ func (p *TypeScriptPlugin) PostRun(n *NoodlesProject) error {
 			"--mangle",    // Mangle variable names
 		}
 
-		closureOutput := coreutils.ExecCommand("uglifyjs", uglifyArgs, true) // Run Google Closure Compiler and store the output in closureOutput
-		nodeDeprecationRemover, _ := regexp.Compile(`\(node\:.+\n`)          // Remove any lines starting with (node:
+		closureOutput := coreutils.ExecCommand("terser", uglifyArgs, true) // Run our JavaScript compressor / minifier and store the output in closureOutput
+		nodeDeprecationRemover, _ := regexp.Compile(`\(node\:.+\n`)        // Remove any lines starting with (node:
 		closureOutput = nodeDeprecationRemover.ReplaceAllString(closureOutput, "")
 		closureOutput = strings.TrimSpace(closureOutput) // Fix trailing newlines
 
@@ -183,7 +183,7 @@ func (p *TypeScriptPlugin) Run(n *NoodlesProject) error {
 	}
 
 	if !ListContains(ValidTypeScriptTargets, n.Target) { // If this is not a valid target
-		n.Target = "ES5" // Set to ES5
+		n.Target = "ES2019" // Set to 2019
 	}
 
 	var modeTypeArgs []string // The mode args we'll be using during compilation
