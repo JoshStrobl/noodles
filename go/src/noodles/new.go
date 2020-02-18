@@ -2,7 +2,7 @@ package main
 
 import (
 	"errors"
-	"fmt"
+	"github.com/JoshStrobl/trunk"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"github.com/stroblindustries/coreutils"
@@ -32,7 +32,7 @@ func new(cmd *cobra.Command, args []string) {
 	if (newProjectName == "") && (newScriptName == "") { // If we're creating a new Noodles workspace
 		if configInfo, statErr := os.Stat("noodles.toml"); statErr == nil { // Check if noodles.toml already exists
 			if configInfo.Size() != 0 { // If the size of the file is greater than 0, meaning there is potentially content
-				fmt.Println("noodles.toml already exists and appears to have content. Exiting")
+				trunk.LogInfo("noodles.toml already exists and appears to have content. Exiting.")
 				return
 			}
 		}
@@ -40,7 +40,7 @@ func new(cmd *cobra.Command, args []string) {
 		NewWorkspacePrompt() // Perform our workspace prompting
 	} else {
 		if noodles.Name == "" { // Noodles workspace doesn't seem to exist
-			fmt.Println("No Noodles workspace appears to exist. Please create a workspace first")
+			trunk.LogErr("No Noodles workspace appears to exist. Please create a workspace first.")
 			os.Exit(1)
 		}
 
@@ -48,14 +48,14 @@ func new(cmd *cobra.Command, args []string) {
 			if _, exists := noodles.Projects[newProjectName]; !exists { // If the project isn't already set
 				NewProjectPrompt(newProjectName) // Perform our project prompting
 			} else { // Project is already set
-				fmt.Println("Project is already defined. Please choose another project name.")
+				trunk.LogErr("Project is already defined. Please choose another project name.")
 				os.Exit(1)
 			}
 		} else if newScriptName != "" { // If a script is set
 			if _, exists := noodles.Scripts[newScriptName]; !exists { // If the script isn't already set
 				NewScriptPrompt(newScriptName) // Perform our script prompting
 			} else { // Script is already set
-				fmt.Println("Script is already defined. Please choose another script name.")
+				trunk.LogErr("Script is already defined. Please choose another script name.")
 				os.Exit(1)
 			}
 		}
@@ -64,7 +64,6 @@ func new(cmd *cobra.Command, args []string) {
 
 // NewWorkspacePrompt will handle the necessary workspace configuration prompts
 func NewWorkspacePrompt() {
-
 	properties := []string{"name", "description", "license", "version"}
 	labels := []string{"Name of Workspace", "Description of Workspace", "License", "Version"}
 
@@ -110,9 +109,9 @@ func NewWorkspacePrompt() {
 	noodles.Version = version
 
 	if saveErr := SaveConfig(); saveErr == nil { // Save the config
-		fmt.Println("Noodles workspace now created!")
+		trunk.LogSuccess("Noodles workspace created.")
 	} else { // Failed to save
-		fmt.Println(saveErr.Error())
+		trunk.LogErrRaw(saveErr)
 		return
 	}
 }
@@ -195,7 +194,6 @@ func GoProjectPrompt(plugin string, name string, project *NoodlesProject) {
 // LESSProjectPrompt will provide the necessary project prompts for a LESS project
 func LESSProjectPrompt(project *NoodlesProject) {
 	appendHashVal := TextPromptValidate("Append SHA256SUM to end of file name [y/N]", TextYNValidate)
-
 	project.AppendHash = IsYes(appendHashVal)
 }
 
