@@ -4,7 +4,6 @@ Validates the existing noodles.toml
 
 ### Synopsis
 
-
 Validates the existing noodles.toml
 
 ```
@@ -18,5 +17,6 @@ noodles check [flags]
 ```
 
 ### SEE ALSO
+
 * [noodles](noodles.md)	 - noodles is an opinionated manager for web apps.
 

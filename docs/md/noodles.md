@@ -4,7 +4,6 @@ noodles is an opinionated manager for web apps.
 
 ### Synopsis
 
-
 noodles is an opinionated manager for web applications, enabling various functionality such as:
 	- basic dependency management for built-in plugin support
 	- compilation of project(s) in a configurable, ordered manner
@@ -17,6 +16,7 @@ noodles is an opinionated manager for web applications, enabling various functio
 ```
 
 ### SEE ALSO
+
 * [noodles build](noodles_build.md)	 - Build all or a specific project
 * [noodles check](noodles_check.md)	 - Validates the existing noodles.toml
 * [noodles lint](noodles_lint.md)	 - Runs available linters for projects
@@ -24,4 +24,5 @@ noodles is an opinionated manager for web applications, enabling various functio
 * [noodles pack](noodles_pack.md)	 - Package configured assets for all or a specified project
 * [noodles script](noodles_script.md)	 - Run a custom script
 * [noodles setup](noodles_setup.md)	 - Set up all or a specific project
+* [noodles tidy](noodles_tidy.md)	 - Runs available tidying utilities for projects
 

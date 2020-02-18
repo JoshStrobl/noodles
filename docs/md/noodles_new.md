@@ -4,7 +4,6 @@ Creates a Noodles workspace, projects, or scripts
 
 ### Synopsis
 
-
 Creates a Noodles workspace, projects, or scripts
 
 ```
@@ -20,5 +19,6 @@ noodles new [flags]
 ```
 
 ### SEE ALSO
+
 * [noodles](noodles.md)	 - noodles is an opinionated manager for web apps.
 

@@ -4,7 +4,6 @@ Runs available linters for projects
 
 ### Synopsis
 
-
 Runs available linters for projects
 
 ```
@@ -20,5 +19,6 @@ noodles lint [flags]
 ```
 
 ### SEE ALSO
+
 * [noodles](noodles.md)	 - noodles is an opinionated manager for web apps.
 

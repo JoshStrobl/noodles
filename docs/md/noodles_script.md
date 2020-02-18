@@ -4,7 +4,6 @@ Run a custom script
 
 ### Synopsis
 
-
 Run a custom script
 
 ```
@@ -20,5 +19,6 @@ noodles script [flags]
 ```
 
 ### SEE ALSO
+
 * [noodles](noodles.md)	 - noodles is an opinionated manager for web apps.
 
