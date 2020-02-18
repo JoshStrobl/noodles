@@ -7,7 +7,6 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/stroblindustries/coreutils"
 	"path/filepath"
-	"regexp"
 	"strings"
 )
 
@@ -53,18 +52,14 @@ func ReadConfig(configPath string) (conf NoodlesConfig, readConfigErr error) {
 
 			conf.Projects[name] = project
 		}
-	} else { // If there was an error decoding
+	} else { // If there was an error decoding'
 		if strings.Contains(convErr.Error(), "no such file or directory") {
 			readConfigErr = errors.New("noodles.toml does not exist in this directory")
 		} else { // If this is some sort of other error, sanitize it and return a new convErr
 			sanitizedErrMessage := strings.Replace(convErr.Error(), "unmarshal", "convert", -1) // Change "unmarshal" to a human language
 			sanitizedErrMessage = strings.Replace(sanitizedErrMessage, "!!", "", -1)
 			sanitizedErrMessage = strings.Replace(sanitizedErrMessage, "`", "", -1) // Remove any ` wrapping types
-
-			re := regexp.MustCompile(`line\s\d+:\s[\s\S]+$`)                                    // Only get line N: message
-			lineErrors := re.FindAllString(sanitizedErrMessage, -1)                             // Find all strings
-			sanitizedErrMessage = strings.Replace(strings.Join(lineErrors, "\n"), "  ", "", -1) // Join all with newline and remove unnecessary whitespace
-			readConfigErr = errors.New(sanitizedErrMessage)                                     // Create a sanitized error
+			readConfigErr = errors.New(sanitizedErrMessage)                         // Create a sanitized error
 		}
 	}
 

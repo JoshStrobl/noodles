@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/JoshStrobl/trunk"
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
@@ -28,8 +29,7 @@ var rootCmd = &cobra.Command{
 			if conf, readErr := ReadConfig(filepath.Join(workdir, "noodles.toml")); readErr == nil { // Read the config
 				noodles = conf
 			} else {
-				fmt.Printf("noodles.toml appears to have the following issue(s):\n%s\n", readErr.Error())
-				os.Exit(1)
+				trunk.LogFatal(fmt.Sprintf("noodles.toml appears to have the following issue(s):\n%s\n", readErr.Error()))
 			}
 		}
 	},
@@ -43,8 +43,7 @@ func init() {
 	workdir, getWdErr = os.Getwd() // Get the current working directory
 
 	if getWdErr != nil { // If we failed to get the current working directory
-		fmt.Printf("Failed to get the current working directory: %s", getWdErr.Error())
-		os.Exit(1)
+		trunk.LogFatal("Failed to get the current working directory: " + getWdErr.Error())
 	}
 
 	rootCmd.AddCommand(buildCmd)
