@@ -34,6 +34,8 @@ func pack(cmd *cobra.Command, args []string) {
 		trunk.LogFatal("tar does not exist on the system.")
 	}
 
+	os.RemoveAll(tmpDir) // Wipe our tmpDir
+
 	var projectsToPack map[string]NoodlesProject
 
 	if packProject == "" {
@@ -83,7 +85,6 @@ func pack(cmd *cobra.Command, args []string) {
 	}
 
 	TarContents()
-	os.RemoveAll(tmpDir) // Wipe our tmpDir
 }
 
 // TarContents will create a tar file out of the contents of our temporary directory and save it to the corresponding .tar file

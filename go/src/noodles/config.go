@@ -36,6 +36,12 @@ func init() {
 // ReadConfig will read any local noodles.toml that exists and returns an error or NoodlesConfig
 func ReadConfig(configPath string) (conf NoodlesConfig, readConfigErr error) {
 	if _, convErr := toml.DecodeFile(configPath, &conf); convErr == nil { // Decode our config
+		if conf.Distribution == nil { // Distribution not set
+			conf.Distribution = &NoodlesDistributionConfig{
+				TarCompressors: []string{"zstd"},
+			}
+		}
+
 		compressors := conf.Distribution.TarCompressors
 
 		if len(compressors) == 0 {
