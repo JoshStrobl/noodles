@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/JoshStrobl/trunk"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,7 +13,7 @@ import (
 // RunRequires will run project pre/postrun function or a script before/after (based on), based on what is provided in requires
 func RunRequires(operationType string, requires []string) {
 	if len(requires) > 0 {
-		fmt.Printf("Running Requires on %s.\n", operationType)
+		trunk.LogInfo("Running Requires on " + operationType)
 
 		for _, projectOrScriptName := range requires {
 			scriptRunAfter := strings.HasSuffix(projectOrScriptName, ":after") // Determine if this should be only run after our project or main script, only applies to scripts
@@ -28,7 +29,7 @@ func RunRequires(operationType string, requires []string) {
 				} else if project.Plugin == "typescript" {
 					plugin = &typescriptPlugin
 				} else {
-					fmt.Printf("Failed to get the plugin for project %s and type %s\n", projectOrScriptName, project.Plugin)
+					trunk.LogErr(fmt.Sprintf("Failed to get the plugin for project %s and type %s\n", projectOrScriptName, project.Plugin))
 					return
 				}
 
@@ -42,11 +43,11 @@ func RunRequires(operationType string, requires []string) {
 					}
 
 					if preRunErr := plugin.RequiresPreRun(&project); preRunErr != nil { // If we failed in our PreRun
-						fmt.Printf("Failed to run %s PreRun: %s\n", projectOrScriptName, preRunErr.Error())
+						trunk.LogErr(fmt.Sprintf("Failed to run %s PreRun: %s\n", projectOrScriptName, preRunErr.Error()))
 					}
 				} else if operationType == "RequiresPostRun" { // If this is a PostRun operation
 					if postRunErr := plugin.RequiresPostRun(&project); postRunErr != nil { // If we failed in our PostRun
-						fmt.Printf("Failed to run %s PostRun: %s\n", projectOrScriptName, postRunErr.Error())
+						trunk.LogErr(fmt.Sprintf("Failed to run %s PostRun: %s\n", projectOrScriptName, postRunErr.Error()))
 					}
 				}
 			} else if _, exists := noodles.Scripts[projectOrScriptName]; exists { // If this is a script
