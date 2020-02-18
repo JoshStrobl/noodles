@@ -3,6 +3,9 @@ License = "Apache-2.0"
 Name = "Noodles"
 Version = 0.1
 
+[Distribution]
+	TarCompressors = ["xz", "zstd"]
+
 [Projects]
 	[Projects.exampleless]
 		Destination = "build/less/example.css"

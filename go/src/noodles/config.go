@@ -12,19 +12,44 @@ import (
 
 // NoodlesConfig is the configuration of global properties of Noodles.
 type NoodlesConfig struct {
-	Description string
-	License     string
-	Name        string
-	Projects    map[string]NoodlesProject
-	Scripts     map[string]NoodlesScript
-	Version     float64
+	Description  string
+	Distribution *NoodlesDistributionConfig
+	License      string
+	Name         string
+	Projects     map[string]NoodlesProject
+	Scripts      map[string]NoodlesScript
+	Version      float64
 }
 
-var noodles NoodlesConfig // Our Noodles Config
+// NoodlesDistributionConfig is the configuration for distribution
+type NoodlesDistributionConfig struct {
+	TarCompressors []string
+}
+
+var SupportedTarCompressors []string // SupportedTarCompressions are various compressions we officially support
+var noodles NoodlesConfig            // Our Noodles Config
+
+func init() {
+	SupportedTarCompressors = []string{"bzip2", "gzip", "lzma", "xz", "zstd"}
+}
 
 // ReadConfig will read any local noodles.toml that exists and returns an error or NoodlesConfig
 func ReadConfig(configPath string) (conf NoodlesConfig, readConfigErr error) {
 	if _, convErr := toml.DecodeFile(configPath, &conf); convErr == nil { // Decode our config
+		compressors := conf.Distribution.TarCompressors
+
+		if len(compressors) == 0 {
+			compressors = []string{"zstd"} // Default to zstd
+			conf.Distribution.TarCompressors = compressors
+		}
+
+		for _, compressor := range compressors {
+			if !ListContains(SupportedTarCompressors, compressor) { // If the provided compressor isn't supported
+				readConfigErr = errors.New("Must use a supported compressor: " + strings.Join(SupportedTarCompressors, ","))
+				return
+			}
+		}
+
 		for name, project := range conf.Projects { // For each noodles project
 			if project.ConsolidateChildDirs && (project.SimpleName == "") { // No SimpleName defined, and it'll be required during consolidation
 				project.SimpleName = name
