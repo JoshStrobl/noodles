@@ -2,7 +2,7 @@ package main
 
 import (
 	"errors"
-	"fmt"
+	"github.com/JoshStrobl/trunk"
 	"github.com/stroblindustries/coreutils"
 	"io/ioutil"
 	"os"
@@ -87,15 +87,13 @@ func (p *TypeScriptPlugin) Check(n *NoodlesProject) NoodlesCheckResult {
 }
 
 // Lint is currently a stub func, offers no functionality yet.
-func (p *TypeScriptPlugin) Lint(n *NoodlesProject, confidence float64) error {
-	var lintErr error
-	fmt.Println("Linting of " + n.SimpleName + " is currently not supported.")
-	return lintErr
+func (p *TypeScriptPlugin) Lint(n *NoodlesProject, confidence float64) (lintErr error) {
+	trunk.LogErr("Linting of TypeScript projects not currently supported.")
+	return
 }
 
 // PreRun will check if the necessary executables for TypeScript and compression are installed
-func (p *TypeScriptPlugin) PreRun(n *NoodlesProject) error {
-	var preRunErr error
+func (p *TypeScriptPlugin) PreRun(n *NoodlesProject) (preRunErr error) {
 	executables := []string{DependenciesMap["compress"].Binary, DependenciesMap["typescript"].Binary}
 
 	for _, executable := range executables { // For each executable
@@ -105,17 +103,16 @@ func (p *TypeScriptPlugin) PreRun(n *NoodlesProject) error {
 		}
 	}
 
-	return preRunErr
+	return
 }
 
 // PostRun will perform compression if the project has enabled it
-func (p *TypeScriptPlugin) PostRun(n *NoodlesProject) error {
-	var postRunErr error
+func (p *TypeScriptPlugin) PostRun(n *NoodlesProject) (postRunErr error) {
 	destDir := filepath.Dir(n.Destination)
 	fileNameWithoutExtension := strings.Replace(filepath.Base(n.Destination), filepath.Ext(n.Destination), "", -1) // Get the base name and remove the extension
 
 	if n.Compress { // If we should minify the content
-		fmt.Println("Minifying compiled JavaScript.")
+		trunk.LogInfo("Minifying compiled JavaScript.")
 
 		uglifyArgs := []string{ // Define uglifyArgs
 			n.Destination, // Input
@@ -151,7 +148,7 @@ func (p *TypeScriptPlugin) PostRun(n *NoodlesProject) error {
 		}
 	}
 
-	return postRunErr
+	return
 }
 
 // RequiresPreRun is a stub function.
@@ -165,9 +162,7 @@ func (p *TypeScriptPlugin) RequiresPostRun(n *NoodlesProject) error {
 }
 
 // Run will run our TypeScript compilation
-func (p *TypeScriptPlugin) Run(n *NoodlesProject) error {
-	var runErr error
-
+func (p *TypeScriptPlugin) Run(n *NoodlesProject) (runErr error) {
 	if n.Destination == "" { // If no custom Destination is set
 		n.Destination = filepath.Join("build", n.SimpleName+".js")
 	}
@@ -209,5 +204,5 @@ func (p *TypeScriptPlugin) Run(n *NoodlesProject) error {
 		runErr = errors.New(commandOutput)
 	}
 
-	return runErr
+	return
 }
