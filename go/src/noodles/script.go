@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/JoshStrobl/trunk"
 	"github.com/spf13/cobra"
 	"github.com/stroblindustries/coreutils"
 	"os"
@@ -43,7 +44,7 @@ func RunScript(name string) {
 	script, _ := noodles.Scripts[name] // Get our script
 
 	if script.Exec != "" { // If there is an executable
-		fmt.Printf("Running script: %s\n", name)
+		trunk.LogInfo("Running script: " + name)
 
 		RunRequires("RequiresPreRun", script.Requires)
 
@@ -58,10 +59,10 @@ func RunScript(name string) {
 			failedToChange := os.Chdir(script.Directory) // Change to the directory
 
 			if failedToChange != nil { // If we failed to change to the directory
-				fmt.Printf("Failed to change to the following directory: %s\n", script.Directory)
+				trunk.LogErrRaw(fmt.Errorf("Failed to change to the following directory: %s\n", script.Directory))
 
 				if verbose {
-					fmt.Printf("Full error: %s\n", failedToChange)
+					trunk.LogDebug(fmt.Sprintf("Full error: %s\n", failedToChange))
 				}
 
 				return // Don't continue with exec
@@ -70,11 +71,11 @@ func RunScript(name string) {
 
 		if verbose {
 			commandRunning := script.Exec + " " + (strings.Join(script.Arguments, " "))
-			fmt.Printf("Running: %s\n", commandRunning)
+			trunk.LogDebug("Running: " + commandRunning)
 		}
 
 		output := coreutils.ExecCommand(script.Exec, script.Arguments, false)
-		fmt.Printf(CleanupGoCompilerOutput(output))
+		trunk.LogInfo(CleanupGoCompilerOutput(output))
 
 		if (script.File != "") && script.Redirect { // If we should redirect output to a file
 			coreutils.WriteOrUpdateFile(script.File, []byte(output), coreutils.NonGlobalFileMode)
@@ -87,6 +88,6 @@ func RunScript(name string) {
 		os.Chdir(workdir) // Change back to the work dir if needed
 		RunRequires("RequiresPostRun", script.Requires)
 	} else {
-		fmt.Printf("No executable set for the script: %s\n", name)
+		trunk.LogErr("No executable set for the script: " + name)
 	}
 }
