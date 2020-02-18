@@ -3,7 +3,7 @@ package main
 // Vendoring Functionality
 
 import (
-	"fmt"
+	"github.com/JoshStrobl/trunk"
 	"github.com/spf13/cobra"
 	"github.com/stroblindustries/coreutils"
 )
@@ -25,7 +25,7 @@ func add(name string) {
 	if name != "" {
 		coreutils.InputMessage("Please enter the repository URL and press [Enter]:")
 	} else {
-		fmt.Println("Please provide a name for this vendor, such as the repository name.")
+		trunk.LogErr("Please provide a name for this vendor, such as the repository name.")
 	}
 }
 
@@ -34,7 +34,7 @@ func fetch(name string) {
 	if name != "" {
 
 	} else {
-		fmt.Println("Please provide a vendor to fetch.")
+		trunk.LogErr("Please provide a vendor to fetch.")
 	}
 }
 
@@ -43,6 +43,6 @@ func delete(name string) {
 	if name != "" {
 
 	} else {
-		fmt.Println("Please provide a vendor to delete.")
+		trunk.LogErr("Please provide a vendor to delete.")
 	}
 }

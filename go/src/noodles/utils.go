@@ -6,7 +6,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"errors"
-	"fmt"
+	"github.com/JoshStrobl/trunk"
 	"github.com/stroblindustries/coreutils"
 	"io"
 	"os"
@@ -77,8 +77,7 @@ func ListContains(list []string, substring string) bool {
 // PromptErrorCheck will check if we have a valid error from a prompt and if so, display and exit.
 func PromptErrorCheck(promptErr error) {
 	if promptErr != nil { // If we failed to get the prompt result
-		fmt.Printf("failed to get the answer to our prompt: %s\n", promptErr.Error())
-		os.Exit(1)
+		trunk.LogFatal("Failed to get the answer to our prompt: " + promptErr.Error())
 	}
 }
 
@@ -110,7 +109,7 @@ func TextPromptValidate(message string, validate validateFunc) string {
 			response = localResp
 			break
 		} else {
-			fmt.Println(err.Error())
+			trunk.LogErrRaw(err)
 		}
 	}
 

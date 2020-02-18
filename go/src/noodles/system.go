@@ -3,7 +3,7 @@ package main
 // This file contains functionality pertaining to interacting with the underlying package management systems of the host
 
 import (
-	"fmt"
+	"github.com/JoshStrobl/trunk"
 	"github.com/stroblindustries/coreutils"
 	"os/user"
 	"runtime"
@@ -102,5 +102,5 @@ func PackageInstaller(packager string, dependencies []string) {
 
 	installFlags = append(installFlags, dependencies...)                 // Append the dependencies / packages we'll be installing
 	installOutput := coreutils.ExecCommand(packager, installFlags, true) // Call ExecCommand and output response to terminal
-	fmt.Println(installOutput)
+	trunk.LogDebug(installOutput)
 }
