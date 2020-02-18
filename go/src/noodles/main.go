@@ -55,6 +55,7 @@ func init() {
 	rootCmd.AddCommand(packCmd)
 	rootCmd.AddCommand(setupCmd)
 	rootCmd.AddCommand(scriptCmd)
+	rootCmd.AddCommand(tidyCmd)
 }
 
 func main() {

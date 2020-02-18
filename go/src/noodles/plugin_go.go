@@ -3,10 +3,12 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/JoshStrobl/trunk"
 	"github.com/stroblindustries/coreutils"
 	xlint "golang.org/x/lint"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -234,9 +236,36 @@ func (p *GoPlugin) Lint(n *NoodlesProject, confidence float64) error {
 	return lintErr
 }
 
+// ModInit will ensure our Go Modules is initted if we don't have a go.mod already
+func (p *GoPlugin) ModInit(n *NoodlesProject) {
+	if !n.EnableGoModules { // Go Modules not enabled
+		return
+	}
+
+	modFile, modOpenErr := os.Open("go.mod")
+	defer modFile.Close()
+
+	if modOpenErr != nil { // Failed to open file
+		if os.IsPermission(modOpenErr) { // Permission error opening file
+			trunk.LogErrRaw(modOpenErr)
+		} else if os.IsNotExist(modOpenErr) { // File doesn't exist
+			coreutils.ExecCommand("go", []string{"mod", "init"}, false) // Run go mod init
+		}
+	}
+}
+
+// Tidy will tidy up Go Modules
+func (p *GoPlugin) ModTidy(n *NoodlesProject) {
+	if !n.EnableGoModules {
+		trunk.LogErr(n.SimpleName + " does not have Go Modules Enabled")
+		return
+	}
+
+	coreutils.ExecCommand("go", []string{"mod", "tidy"}, false) // Run go mod tidy to remove unused deps
+}
+
 // PreRun will check if the necessary Go executable is installed
 func (p *GoPlugin) PreRun(n *NoodlesProject) (preRunErr error) {
-
 	if !coreutils.ExecutableExists("go") { // If the go executable does not exist
 		preRunErr = errors.New("go is not installed on your system. Please run noodles setup")
 		return
@@ -245,6 +274,8 @@ func (p *GoPlugin) PreRun(n *NoodlesProject) (preRunErr error) {
 	if preRunErr = ToggleGoModules(n.EnableGoModules, false); preRunErr != nil { // Failed to set go modules support
 		return
 	}
+
+	p.ModInit(n) // Mod Init if necessary
 
 	if !n.DisableNestedEnvironment { // If nested environment isn't disabled
 		if preRunErr = ToggleGoEnv(true); preRunErr != nil { // Failed to toggle go environment
@@ -307,9 +338,7 @@ func (p *GoPlugin) RequiresPostRun(n *NoodlesProject) error {
 }
 
 // Run will compile the provided project
-func (p *GoPlugin) Run(n *NoodlesProject) error {
-	var runErr error
-
+func (p *GoPlugin) Run(n *NoodlesProject) (runErr error) {
 	if n.Destination == "" { // If a destination is not set
 		if n.Type == "binary" { // If this is a binary
 			n.Destination = filepath.Join(workdir, "build", n.SimpleName) // Set destination to build/name (as binary)
@@ -327,7 +356,10 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 	}
 
 	if n.Type != "package" { // Binary or plugin
-		runErr = os.MkdirAll(filepath.Dir(n.Destination), coreutils.NonGlobalFileMode)
+		if runErr = os.MkdirAll(filepath.Dir(n.Destination), coreutils.NonGlobalFileMode); runErr != nil { // Failed to create directories
+			runErr = fmt.Errorf("failed to create the necessary directories:\n%s\n", runErr.Error())
+			return
+		}
 	}
 
 	if (n.Type == "package") && n.Source == "" { // If this is a package and source is not set
@@ -338,61 +370,52 @@ func (p *GoPlugin) Run(n *NoodlesProject) error {
 		}
 	}
 
-	if runErr == nil { // If there wasn't any error creating the necessary directories
-		args := []string{"build"}
+	args := []string{"build"}
 
-		if n.Type != "package" { // Binary or plugin
-			files := n.GetFiles() // Exclude _test files
+	if n.Type != "package" { // Binary or plugin
+		files := n.GetFiles() // Exclude _test files
 
-			if n.Type == "plugin" { // Plugin
-				args = append(args, []string{"-buildmode", "plugin"}...)
-			}
-
-			args = append(args, []string{"-o", n.Destination}...)
-			args = append(args, files...)
-		} else if n.Type == "package" && !n.DisableNestedEnvironment { // Package and we're using a nested env
-			args = append(args, n.SimpleName) // Append the simple name of the package since that's what our GOPATH will recognize
+		if n.Type == "plugin" { // Plugin
+			args = append(args, []string{"-buildmode", "plugin"}...)
 		}
 
-		goCompilerOutput := coreutils.ExecCommand("go", args, true)
-		var buildSuccessful bool
+		args = append(args, []string{"-o", n.Destination}...)
+		args = append(args, files...)
+	} else if n.Type == "package" && !n.DisableNestedEnvironment { // Package and we're using a nested env
+		args = append(args, n.SimpleName) // Append the simple name of the package since that's what our GOPATH will recognize
+	}
 
-		if len(goCompilerOutput) != 0 {
-			compilerOutputLines := strings.Split(goCompilerOutput, "\n") // Split on newlines
+	builder := exec.Command("go", args...) // Create an os/exec command for go building
 
-			for _, compilerOutputLine := range compilerOutputLines { // For each line
-				compilerOutputLine = strings.TrimSpace(compilerOutputLine) // Trim spacing
+	stderr, pipeErr := builder.StderrPipe()
+	stdout, outErr := builder.StdoutPipe()
 
-				if len(compilerOutputLine) != 0 &&
-					(strings.Contains(compilerOutputLine, "can't") || // Typically can't load package, failure to import
-						strings.Contains(compilerOutputLine, "cannot") || // Cannot load a package, namely when using Go modules with multiple paths in relative GOPATH
-						strings.Contains(compilerOutputLine, ".go") ||
-						strings.Contains(compilerOutputLine, "# ")) {
-					buildSuccessful = false // Reset to false
-					break                   // Break, with buildSuccessful being false
-				} else {
-					buildSuccessful = true // Temporarily accept build may be successful
-				}
-			}
-		} else { // Absolutely no output, so a success (can happen when building and no errors, however not when pulling down modules at the same time)
-			buildSuccessful = true
-		}
+	if pipeErr != nil {
+		runErr = errors.New("Failed to create pipe for stderr for build command")
+	} else if outErr != nil {
+		runErr = errors.New("Failed to create pipe for stdout for build command")
+	}
 
-		if buildSuccessful {
-			fmt.Println("Build successful.")
+	if runErr != nil { // Failed during pipe creation
+		return
+	}
 
-			if n.Type == "binary" {
-				coreutils.ExecCommand("strip", []string{n.Destination}, true) // Strip the binary
-			}
+	defer stderr.Close()
+	defer stdout.Close()
 
-			if debug {
-				fmt.Println(goCompilerOutput) // Always output compiler content
-			}
-		} else {
-			runErr = errors.New(CleanupGoCompilerOutput(goCompilerOutput))
-		}
-	} else { // If we failed to create the necessary directories
-		fmt.Printf("failed to create the necessary directories:\n%s\n", runErr.Error())
+	builder.Start() // Start, use instead of Run for piping
+
+	stderrOutput, _ := ioutil.ReadAll(stderr) // Read from stderr
+	stdoutOutput, _ := ioutil.ReadAll(stdout) // Read from stdout
+
+	if len(stderrOutput) != 0 { // Have stderr content
+		return errors.New(CleanupGoCompilerOutput(string(stderrOutput[:]))) // Return an error that is our stderr content
+	} else if len(stdoutOutput) != 0 && debug { // Have stdout content and debugging
+		trunk.LogDebug(CleanupGoCompilerOutput(string(stdoutOutput[:])))
+	}
+
+	if n.Type == "binary" {
+		coreutils.ExecCommand("strip", []string{n.Destination}, true) // Strip the binary
 	}
 
 	return runErr

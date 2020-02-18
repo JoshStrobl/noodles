@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/JoshStrobl/trunk"
 	"github.com/spf13/cobra"
 )
 
@@ -48,18 +49,18 @@ func LintProject(name string) {
 			break
 		}
 
-		fmt.Printf("Performing pre-run checks for %s\n", name)
+		trunk.LogInfo("Performing pre-run checks for " + name)
 		preRunErr := plugin.PreRun(&project)
 
 		if preRunErr != nil { // If there was an error during pre-run
-			fmt.Printf("An error occurred during pre-run checks:\n%s\n", preRunErr.Error())
+			trunk.LogErrRaw(fmt.Errorf("An error occurred during pre-run checks:\n%s\n", preRunErr.Error()))
 			return
 		}
 
 		lintErr := plugin.Lint(&project, minimumConfidence)
 
 		if lintErr != nil {
-			fmt.Printf("An error occurred during linting:\n%s\n", lintErr.Error())
+			trunk.LogErrRaw(fmt.Errorf("An error occurred during linting:\n%s\n", lintErr.Error()))
 
 			if project.Plugin != "go" { // If this isn't Go, where it's absolutely mandatory to do a GOPATH reset
 				return
@@ -67,14 +68,14 @@ func LintProject(name string) {
 		}
 
 		if project.Plugin == "go" { // Only post-run is required for Go to reset env
-			fmt.Printf("Performing post-run for %s\n", name)
+			trunk.LogInfo("Performing post-run for " + name)
 			postRunErr := plugin.PostRun(&project)
 
 			if postRunErr != nil { // If there was an error during post-run
-				fmt.Printf("An error occurred during post-run:\n%s\n", postRunErr.Error())
+				trunk.LogErrRaw(fmt.Errorf("An error occurred during post-run:\n%s\n", postRunErr.Error()))
 			}
 		}
 	} else {
-		fmt.Println(name + " is not a valid project")
+		trunk.LogErr(name + " is not a valid project")
 	}
 }

@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/JoshStrobl/trunk"
 	"github.com/spf13/cobra"
 )
 
@@ -47,23 +48,25 @@ func BuildProject(name string) {
 		} else if project.Plugin == "typescript" {
 			plugin = &typescriptPlugin
 		} else {
-			fmt.Printf("Failed to get the plugin for type: %s\n", project.Plugin)
+			trunk.LogErr("Failed to get the plugin for type: " + project.Plugin)
 			return
 		}
 
-		fmt.Printf("Performing pre-run checks for %s\n", name)
+		trunk.LogInfo("Performing pre-run checks for " + name)
 		preRunErr := plugin.PreRun(&project)
 
 		if preRunErr != nil { // If there was an error during pre-run
-			fmt.Printf("An error occurred during pre-run checks:\n%s\n", preRunErr.Error())
+			trunk.LogErrRaw(fmt.Errorf("An error occurred during pre-run checks:\n%s\n", preRunErr.Error()))
 			return
 		}
 
-		fmt.Printf("Performing compilation for %s\n", name)
+		trunk.LogInfo("Performing compilation for " + name)
 		runErr := plugin.Run(&project)
 
-		if runErr != nil { // If there was an error during run
-			fmt.Printf("An error occurred during compilation:\n%s\n", runErr.Error())
+		if runErr == nil { // Compilation was successful
+			trunk.LogSuccess(fmt.Sprintf("Built %s", name))
+		} else {
+			trunk.LogErrRaw(fmt.Errorf("An error occurred during compilation:\n%s\n", runErr.Error()))
 
 			if project.Plugin != "go" { // If this isn't Go, where it's absolutely mandatory to do a GOPATH reset
 				return
@@ -72,13 +75,13 @@ func BuildProject(name string) {
 
 		RunRequires("RequiresPostRun", project.Requires)
 
-		fmt.Printf("Performing post-run for %s\n", name)
+		trunk.LogInfo("Performing post-run for " + name)
 		postRunErr := plugin.PostRun(&project)
 
 		if postRunErr != nil { // If there was an error during post-run
-			fmt.Printf("An error occurred during post-run:\n%s\n", postRunErr.Error())
+			trunk.LogErrRaw(fmt.Errorf("An error occurred during post-run:\n%s\n", postRunErr.Error()))
 		}
 	} else {
-		fmt.Println(name + " is not a valid project")
+		trunk.LogErr(name + " is not a valid project")
 	}
 }
