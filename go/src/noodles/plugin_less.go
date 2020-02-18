@@ -2,7 +2,7 @@ package main
 
 import (
 	"errors"
-	"fmt"
+	"github.com/JoshStrobl/trunk"
 	"github.com/stroblindustries/coreutils"
 	"io/ioutil"
 	"os"
@@ -34,8 +34,6 @@ func (p *LessPlugin) Check(n *NoodlesProject) NoodlesCheckResult {
 
 // Lint will lint our LESS
 func (p *LessPlugin) Lint(n *NoodlesProject, confidence float64) error {
-	var lintErr error
-
 	if n.Source == "" { // If no Source is set
 		n.Source = filepath.Join("src/less/", n.SimpleName+".less")
 	}
@@ -44,26 +42,22 @@ func (p *LessPlugin) Lint(n *NoodlesProject, confidence float64) error {
 	lessFlags = append(lessFlags, "--lint", n.Source) // Add our source and lint flag
 
 	commandOutput := coreutils.ExecCommand("lessc", lessFlags, false) // Call execCommand and get its commandOutput
-	fmt.Println(commandOutput)
+	trunk.LogInfo(commandOutput)
 
-	return lintErr
+	return nil
 }
 
 // PreRun will check if the necessary lessc executable is installed
-func (p *LessPlugin) PreRun(n *NoodlesProject) error {
-	var preRunErr error
-
+func (p *LessPlugin) PreRun(n *NoodlesProject) (preRunErr error) {
 	if !coreutils.ExecutableExists("lessc") { // If the lessc executable does not exist
 		preRunErr = errors.New("lessc is not installed on your system. Please run noodles setup")
 	}
 
-	return preRunErr
+	return
 }
 
 // PostRun will handle hash appending for generated CSS files, should it be enabled.
-func (p *LessPlugin) PostRun(n *NoodlesProject) error {
-	var postRunErr error
-
+func (p *LessPlugin) PostRun(n *NoodlesProject) (postRunErr error) {
 	if n.AppendHash { // If we should append the hash
 		var fileContent []byte
 		fileContent, postRunErr = ioutil.ReadFile(n.Destination)
@@ -76,7 +70,7 @@ func (p *LessPlugin) PostRun(n *NoodlesProject) error {
 		}
 	}
 
-	return postRunErr
+	return
 }
 
 // RequiresPreRun is a stub function.
