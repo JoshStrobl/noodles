@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/JoshStrobl/trunk"
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 var checkCmd = &cobra.Command{
@@ -27,7 +29,7 @@ func check(cmd *cobra.Command, args []string) {
 
 	for name, project := range noodles.Projects { // For each project
 		var plugin NoodlesPlugin
-		fmt.Printf("Checking %s:\n", name)
+		trunk.LogInfo("Checking " + name)
 
 		if project.Plugin != "" {
 			switch project.Plugin {
@@ -41,31 +43,39 @@ func check(cmd *cobra.Command, args []string) {
 				plugin = &typescriptPlugin
 				break
 			default:
-				fmt.Printf("%s is not a valid plugin.\n", project.Plugin)
-				os.Exit(1)
+				trunk.LogFatal(project.Plugin + "is not a valid plugin.")
 			}
 
 			results := plugin.Check(&project) // Check the project, return our check results
-			resultsTypes := []string{"Deprecations", "Errors", "Recommendation"}
+			resultsTypes := []string{"Deprecations", "Errors", "Recommendations"}
 
 			for _, resultType := range resultsTypes {
 				if resultList, exists := results[resultType]; exists { // This type exists
 					if len(resultList) != 0 { // There are items in this type
-						fmt.Printf("\t%s:\n", resultType)
+						header := fmt.Sprintf("%s (%s)", resultType, strconv.Itoa(len(resultList)))
+
+						if resultType == "Deprecations" { // Deprecations
+							trunk.LogWarn(header)
+						} else if resultType == "Errors" { // Errors
+							trunk.LogErr(header)
+						} else if resultType == "Recommendations" { // Recommendations
+							trunk.LogInfo(header)
+						}
+
 						for _, item := range resultList { // For each item
-							fmt.Printf("\t\t❌ %s\n", item)
+							fmt.Println(item)
 						}
 					} else {
-						fmt.Printf("\t%s: None\n", resultType)
+						trunk.LogSuccess(fmt.Sprintf("%s: None", resultType))
 					}
 				} else {
-					fmt.Printf("\t%s: None\n", resultType)
+					trunk.LogSuccess(fmt.Sprintf("%s: None", resultType))
 				}
 			}
 
 			fmt.Println()
 		} else if project.Plugin == "" && project.Requires == nil { // No Plugin or Requires are set
-			fmt.Printf("%s is missing a plugin definition.\n", name)
+			trunk.LogErr(name + " is missing a plugin definition.")
 		}
 	}
 }
