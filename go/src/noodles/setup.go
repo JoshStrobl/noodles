@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/JoshStrobl/trunk"
 	"github.com/spf13/cobra"
 	"github.com/stroblindustries/coreutils"
-	"os"
 	"strings"
 )
 
@@ -48,8 +48,7 @@ func Setup(cmd *cobra.Command, args []string) {
 				setupProject: projectInfo,
 			}
 		} else { // If project does not exist
-			fmt.Printf("%s is not a valid project.\n", setupProject)
-			os.Exit(1)
+			trunk.LogFatal(setupProject + " is not a valid project.")
 		}
 	} else { // If no project has been specified
 		projects = noodles.Projects
@@ -59,9 +58,9 @@ func Setup(cmd *cobra.Command, args []string) {
 		dependenciesExist, dependenciesMissing := HasDependencies(projectInfo) // Check if we have dependencies for this plugin
 
 		if dependenciesExist {
-			fmt.Printf("Dependencies for %s are already satisfied.\n", name)
+			trunk.LogSuccess(fmt.Sprintf("Dependencies for %s are already satisfied.", name))
 		} else {
-			fmt.Printf("Dependencies for %s are not satisfied.\n", name)
+			trunk.LogInfo(fmt.Sprintf("Dependencies for %s are not satisfied.", name))
 			PrintSummary(dependenciesMissing)
 
 			if SystemPackager != "unknown" && SystemPackager != "none" { // If we've determined a valid package manager
@@ -79,12 +78,10 @@ func Setup(cmd *cobra.Command, args []string) {
 						PackageInstaller("npm", dependenciesMissing) // Now install NPM packages
 					}
 				} else { // If we are not running as root
-					fmt.Println("You must run noodles setup with sudo (root) to install the necessary dependencies.")
-					os.Exit(1)
+					trunk.LogFatal("You must run noodles setup with sudo (root) to install the necessary dependencies.")
 				}
 			} else {
-				fmt.Println("Unable to determine the appropriate package manager, if any. Please manually install dependencies.")
-				os.Exit(1)
+				trunk.LogFatal("Unable to determine the appropriate package manager, if any. Please manually install dependencies.")
 			}
 		}
 	}
@@ -133,13 +130,13 @@ func PrintSummary(missing []string) {
 	if firstItem == "go" || firstItem == "nodejs" { // If we're missing a system-level dependency
 		systemDepMap := DependenciesMap[firstItem] // Get the dependency map for this system package
 
-		fmt.Printf("Missing System Package: %s\n", systemDepMap.Dependencies[0])
+		trunk.LogInfo("Missing System Package: " + systemDepMap.Dependencies[0])
 		npmPackages = missing[1:] // Set any extra dependencies to npmPackages
 	} else { // If the first item is not a system-level package
 		npmPackages = missing // Set all of missing to npmPackages
 	}
 
 	if len(npmPackages) != 0 { // If we're missing NPM packages
-		fmt.Printf("Missing NPM Package(s): %s\n", strings.Join(npmPackages, ", "))
+		trunk.LogInfo(fmt.Sprintf("Missing NPM Package(s): %s", strings.Join(npmPackages, ", ")))
 	}
 }

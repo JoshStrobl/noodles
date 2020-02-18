@@ -75,7 +75,11 @@ func RunScript(name string) {
 		}
 
 		output := coreutils.ExecCommand(script.Exec, script.Arguments, false)
-		trunk.LogInfo(CleanupGoCompilerOutput(output))
+		output = CleanupGoCompilerOutput(output)
+
+		if len(output) != 0 { // Have output
+			trunk.LogInfo(output)
+		}
 
 		if (script.File != "") && script.Redirect { // If we should redirect output to a file
 			coreutils.WriteOrUpdateFile(script.File, []byte(output), coreutils.NonGlobalFileMode)
