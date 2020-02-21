@@ -97,6 +97,19 @@ func PromptExtensionValidate(expectedType, input string) error {
 	return promptExtensionError
 }
 
+// RemoveHashedFiles will remove any existing hashed files of a given type and file base name from the destination
+func RemoveHashedFiles(destination, t, fileBaseName string) {
+	if files, getErr := coreutils.GetFilesContains(destination, t); getErr == nil { // Got respective files from the destination directory
+		for _, file := range files { // For each file
+			fileName := filepath.Base(file)
+
+			if strings.HasPrefix(fileName, fileBaseName+"-") { // Existing file with hash
+				os.Remove(file) // Remove file
+			}
+		}
+	}
+}
+
 // TextPromptValidate will get the requested input based on the message and validate it against our validate func
 func TextPromptValidate(message string, validate validateFunc) string {
 	var response string

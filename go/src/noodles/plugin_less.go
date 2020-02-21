@@ -63,9 +63,13 @@ func (p *LessPlugin) PostRun(n *NoodlesProject) (postRunErr error) {
 		fileContent, postRunErr = ioutil.ReadFile(n.Destination)
 
 		if postRunErr == nil { // No error during read
+			destDir := filepath.Dir(n.Destination)
 			hash := CreateHash(fileContent)
 			fileNameWithoutExtension := strings.Replace(filepath.Base(n.Destination), filepath.Ext(n.Destination), "", -1) // Get the base name and remove the extension
-			newFileName := filepath.Join(filepath.Dir(n.Destination), fileNameWithoutExtension+"-"+hash+".css")
+
+			RemoveHashedFiles(destDir, "css", fileNameWithoutExtension) // Remove existing hashed files
+
+			newFileName := filepath.Join(destDir, fileNameWithoutExtension+"-"+hash+".css")
 			os.Rename(n.Destination, newFileName)
 		}
 	}

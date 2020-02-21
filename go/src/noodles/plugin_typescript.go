@@ -109,7 +109,18 @@ func (p *TypeScriptPlugin) PreRun(n *NoodlesProject) (preRunErr error) {
 // PostRun will perform compression if the project has enabled it
 func (p *TypeScriptPlugin) PostRun(n *NoodlesProject) (postRunErr error) {
 	destDir := filepath.Dir(n.Destination)
-	fileNameWithoutExtension := strings.Replace(filepath.Base(n.Destination), filepath.Ext(n.Destination), "", -1) // Get the base name and remove the extension
+	fileName := filepath.Base(n.Destination)
+	fileNameWithoutExtension := strings.Replace(fileName, filepath.Ext(n.Destination), "", -1) // Get the base name and remove the extension
+
+	if n.AppendHash { // Appended hash
+		jsExtension := ".js"
+
+		if n.Compress { // If we're not compressing
+			jsExtension = ".min.js"
+		}
+
+		RemoveHashedFiles(destDir, jsExtension, fileNameWithoutExtension) // Remove existing hashed files
+	}
 
 	if n.Compress { // If we should minify the content
 		trunk.LogInfo("Minifying compiled JavaScript.")
