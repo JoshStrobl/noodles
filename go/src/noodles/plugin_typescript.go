@@ -125,13 +125,13 @@ func (p *TypeScriptPlugin) PostRun(n *NoodlesProject) (postRunErr error) {
 	if n.Compress { // If we should minify the content
 		trunk.LogInfo("Minifying compiled JavaScript.")
 
-		terserArgs := []string{ // Define terserArgs
+		uglifyArgs := []string{ // Define uglifyArgs
 			n.Destination, // Input
 			"--compress",  // Yes, I like to compress things
 			"--mangle",    // Mangle variable names
 		}
 
-		closureOutput := coreutils.ExecCommand("terser", terserArgs, true) // Run our JavaScript compressor / minifier and store the output in closureOutput
+		closureOutput := coreutils.ExecCommand("terser", uglifyArgs, true) // Run our JavaScript compressor / minifier and store the output in closureOutput
 		nodeDeprecationRemover, _ := regexp.Compile(`\(node\:.+\n`)        // Remove any lines starting with (node:
 		closureOutput = nodeDeprecationRemover.ReplaceAllString(closureOutput, "")
 		closureOutput = strings.TrimSpace(closureOutput) // Fix trailing newlines
