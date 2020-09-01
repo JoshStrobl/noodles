@@ -8,12 +8,14 @@ Version = 0.1
 
 [Projects]
 	[Projects.exampleless]
+		ConsolidateChildDirs = false
 		Destination = "build/less/example.css"
 		Plugin = "less"
 		SimpleName = "exampleless"
 		Source = "src/less/example.less"
 	[Projects.exampletypescript]
 		Compress = true
+		ConsolidateChildDirs = false
 		Destination = "build/typescript/example.js"
 		Mode = "advanced"
 		Plugin = "typescript"
@@ -21,6 +23,7 @@ Version = 0.1
 		Source = "src/typescript/example/example.ts"
 		Target = "ES2019"
 	[Projects.noodles]
+		ConsolidateChildDirs = false
 		Destination = "build/noodles"
 		EnableGoModules = true
 		Plugin = "go"
@@ -28,6 +31,7 @@ Version = 0.1
 		Source = "src/noodles/*.go"
 		Type = "binary"
 	[Projects.noodlestest]
+		ConsolidateChildDirs = false
 		Destination = "build/test-recursion/noodles"
 		Plugin = "go"
 		SimpleName = "noodlestest"
@@ -55,8 +59,8 @@ Version = 0.1
 		Requires = ["argtest:after", "whoami"]
 		UseGoEnv = true
 	[Scripts.testfile]
-		File = "build/testoutput"
 		Exec = "ls"
+		File = "build/testoutput"
 		Redirect = true
 	[Scripts.whoami]
 		Description = "Script to test basic exec call by running whoami."
